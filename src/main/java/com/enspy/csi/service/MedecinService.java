@@ -1,0 +1,11 @@
+package com.enspy.csi.service;
+
+import com.enspy.csi.dto.request.MedecinRequestDTO;
+import com.enspy.csi.dto.response.MedecinResponseDTO;
+import java.util.List;
+
+public interface MedecinService {
+    MedecinResponseDTO enregistrerMedecin(MedecinRequestDTO dto);
+    MedecinResponseDTO getMedecinById(Long id);
+    List<MedecinResponseDTO> getAllMedecins();
+}

@@ -1,0 +1,33 @@
+package com.enspy.csi.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "feuille_maladie")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = {"remboursement"})
+public class FeuillemMaladie {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "id_feuille", unique = true)
+    private String idFeuille;
+
+    @Column(name = "montant_soin")
+    private Double montantSoin;
+
+    @Column(name = "est_rembourse")
+    private Boolean estRembourse = false;
+
+    @OneToOne
+    @JoinColumn(name = "consultation_id")
+    private Consultation consultation;
+
+    @OneToOne(mappedBy = "feuilleMaladie", cascade = CascadeType.ALL)
+    private Remboursement remboursement;
+}
