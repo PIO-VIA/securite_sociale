@@ -16,7 +16,9 @@ Créez une base de données PostgreSQL nommée `securite_sociale_db`.
 
 Configurez vos identifiants PostgreSQL locaux dans le fichier `.env` à la racine du projet :
 ```env
-DB_URL=jdbc:postgresql://localhost:5432/securite_sociale_db
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=securite_sociale_db
 DB_USERNAME=votre_utilisateur
 DB_PASSWORD=votre_mot_de_passe
 ```
