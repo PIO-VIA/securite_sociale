@@ -25,7 +25,7 @@ services:
     build: .
     container_name: securite_sociale_backend
     ports:
-      - "8090:8080"
+      - "8090:8090"
     environment:
       # Connexion à la base de données via le nom du service docker (db)
       - DB_HOST=db
