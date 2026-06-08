@@ -12,4 +12,5 @@ public interface AssureRepository extends JpaRepository<Assure, Long> {
     Optional<Assure> findByIdAssure(String idAssure);
     List<Assure> findByMedecinTraitantId(Long generalisteId);
     boolean existsByIdAssure(String idAssure);
+    Optional<Assure> findByEmail(String email);
 }

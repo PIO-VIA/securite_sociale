@@ -10,4 +10,5 @@ public class MedecinResponseDTO {
     private Boolean estAssure;
     private String type;
     private String domaineSpecialisation;
+    private String email;
 }

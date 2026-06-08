@@ -22,6 +22,7 @@ public class AssureServiceImpl implements AssureService {
 
     private final AssureRepository assureRepository;
     private final GeneralisteRepository generalisteRepository;
+    private final @org.springframework.context.annotation.Lazy org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Override
     public AssureResponseDTO inscrireAssure(AssureRequestDTO dto) {
@@ -34,6 +35,10 @@ public class AssureServiceImpl implements AssureService {
         assure.setProfession(dto.getProfession());
         assure.setStatutMatrimoniale(dto.getStatutMatrimoniale());
         assure.setGroupeSanguin(dto.getGroupeSanguin());
+        assure.setEmail(dto.getEmail());
+        if (dto.getMotDePasse() != null) {
+            assure.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
+        }
         assure.setIdAssure("ASS-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         assure.setDateInscription(LocalDate.now());
         return toDTO(assureRepository.save(assure));
@@ -65,6 +70,8 @@ public class AssureServiceImpl implements AssureService {
         if (dto.getProfession() != null) assure.setProfession(dto.getProfession());
         if (dto.getStatutMatrimoniale() != null) assure.setStatutMatrimoniale(dto.getStatutMatrimoniale());
         if (dto.getGroupeSanguin() != null) assure.setGroupeSanguin(dto.getGroupeSanguin());
+        if (dto.getEmail() != null) assure.setEmail(dto.getEmail());
+        if (dto.getMotDePasse() != null) assure.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
         return toDTO(assureRepository.save(assure));
     }
 
@@ -94,6 +101,7 @@ public class AssureServiceImpl implements AssureService {
         dto.setDateNaissance(assure.getDateNaissance());
         dto.setProfession(assure.getProfession());
         dto.setGroupeSanguin(assure.getGroupeSanguin());
+        dto.setEmail(assure.getEmail());
         return dto;
     }
 }

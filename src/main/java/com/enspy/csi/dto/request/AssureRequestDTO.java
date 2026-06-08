@@ -13,4 +13,6 @@ public class AssureRequestDTO {
     private String profession;
     private String statutMatrimoniale;
     private String groupeSanguin;
+    private String email;
+    private String motDePasse;
 }

@@ -27,6 +27,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService customUserDetailsService;
+    private final com.enspy.csi.config.JwtUtil jwtUtil;
 
     @PostMapping("/login")
     @Operation(summary = "Connexion pour les médecins et l'organisme")
@@ -46,9 +47,7 @@ public class AuthController {
                         .body("Rôle non autorisé pour cette interface. Seuls les médecins et l'organisme peuvent se connecter ici.");
             }
 
-            String token = "Basic " + Base64.getEncoder().encodeToString(
-                    (dto.getUsername() + ":" + dto.getPassword()).getBytes()
-            );
+            String token = jwtUtil.generateToken(dto.getUsername(), role);
 
             return ResponseEntity.ok(AuthResponseDTO.builder()
                     .username(dto.getUsername())

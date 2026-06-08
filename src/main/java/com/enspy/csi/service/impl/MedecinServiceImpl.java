@@ -23,6 +23,7 @@ public class MedecinServiceImpl implements MedecinService {
     private final MedecinRepository medecinRepository;
     private final GeneralisteRepository generalisteRepository;
     private final SpecialisteRepository specialisteRepository;
+    private final @org.springframework.context.annotation.Lazy org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Override
     public MedecinResponseDTO enregistrerMedecin(MedecinRequestDTO dto) {
@@ -40,6 +41,10 @@ public class MedecinServiceImpl implements MedecinService {
                 g.setNumTelephone(dto.getNumTelephone());
                 g.setMatricule(dto.getMatricule());
                 g.setEstAssure(dto.getEstAssure() != null ? dto.getEstAssure() : false);
+                g.setEmail(dto.getEmail());
+                if (dto.getMotDePasse() != null) {
+                    g.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
+                }
                 yield toDTO(generalisteRepository.save(g), "GENERALISTE");
             }
             case "SPECIALISTE" -> {
@@ -52,6 +57,10 @@ public class MedecinServiceImpl implements MedecinService {
                 s.setMatricule(dto.getMatricule());
                 s.setEstAssure(dto.getEstAssure() != null ? dto.getEstAssure() : false);
                 s.setDomaineSpecialisation(dto.getDomaineSpecialisation());
+                s.setEmail(dto.getEmail());
+                if (dto.getMotDePasse() != null) {
+                    s.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
+                }
                 yield toDTO(specialisteRepository.save(s), "SPECIALISTE");
             }
             default -> throw new IllegalArgumentException(
@@ -80,6 +89,7 @@ public class MedecinServiceImpl implements MedecinService {
         dto.setMatricule(medecin.getMatricule());
         dto.setEstAssure(medecin.getEstAssure());
         dto.setType(type);
+        dto.setEmail(medecin.getEmail());
         if (medecin instanceof Specialiste s) {
             dto.setDomaineSpecialisation(s.getDomaineSpecialisation());
         }

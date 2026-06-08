@@ -24,8 +24,7 @@ public class AuthControllerTest {
 
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     public void setup() {

@@ -47,20 +47,30 @@ public class CustomUserDetailsService implements UserDetailsService {
                     .build();
         }
 
-        // 2. Doctor by matricule
-        Optional<Medecin> medecinOpt = medecinRepository.findByMatricule(username);
+        // 2. Doctor by email or matricule
+        Optional<Medecin> medecinOpt = medecinRepository.findByEmail(username);
+        if (!medecinOpt.isPresent()) {
+            medecinOpt = medecinRepository.findByMatricule(username);
+        }
         if (medecinOpt.isPresent()) {
-            return User.withUsername(username)
-                    .password(passwordEncoder.encode("password"))
+            Medecin medecin = medecinOpt.get();
+            String pwd = medecin.getMotDePasse() != null ? medecin.getMotDePasse() : passwordEncoder.encode("password");
+            return User.withUsername(medecin.getEmail() != null ? medecin.getEmail() : medecin.getMatricule())
+                    .password(pwd)
                     .roles("MEDECIN")
                     .build();
         }
 
-        // 3. Patient by idAssure
-        Optional<Assure> assureOpt = assureRepository.findByIdAssure(username);
+        // 3. Patient by email or idAssure
+        Optional<Assure> assureOpt = assureRepository.findByEmail(username);
+        if (!assureOpt.isPresent()) {
+            assureOpt = assureRepository.findByIdAssure(username);
+        }
         if (assureOpt.isPresent()) {
-            return User.withUsername(username)
-                    .password(passwordEncoder.encode("password"))
+            Assure assure = assureOpt.get();
+            String pwd = assure.getMotDePasse() != null ? assure.getMotDePasse() : passwordEncoder.encode("password");
+            return User.withUsername(assure.getEmail() != null ? assure.getEmail() : assure.getIdAssure())
+                    .password(pwd)
                     .roles("ASSURE")
                     .build();
         }

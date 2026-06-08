@@ -40,8 +40,7 @@ public class PrescriptionControllerTest {
     @MockitoBean(name = "securityService")
     private SecurityService securityService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     public void setup() {

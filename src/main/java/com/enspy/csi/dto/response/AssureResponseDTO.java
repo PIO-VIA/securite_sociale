@@ -11,4 +11,5 @@ public class AssureResponseDTO {
     private LocalDate dateNaissance;
     private String profession;
     private String groupeSanguin;
+    private String email;
 }

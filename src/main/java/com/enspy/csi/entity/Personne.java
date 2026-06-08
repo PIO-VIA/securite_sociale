@@ -28,4 +28,10 @@ public abstract class Personne {
 
     @Column(name = "num_telephone")
     private String numTelephone;
+
+    @Column(name = "email", unique = true)
+    private String email;
+
+    @Column(name = "mot_de_passe")
+    private String motDePasse;
 }
