@@ -61,6 +61,13 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<FeuillemMaladieResponseDTO> getFeuillesByAssure(Long assureId) {
+        return feuillemMaladieRepository.findByConsultationAssureId(assureId).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
     private FeuillemMaladieResponseDTO toDTO(FeuillemMaladie fm) {
         FeuillemMaladieResponseDTO dto = new FeuillemMaladieResponseDTO();
         dto.setId(fm.getId());

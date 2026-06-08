@@ -9,4 +9,5 @@ public interface FeuillemMaladieService {
     FeuillemMaladieResponseDTO getFeuilleMaladieById(Long id);
     List<FeuillemMaladieResponseDTO> getAllFeuillesMaladie();
     List<FeuillemMaladieResponseDTO> getFeuillesNonRemboursees();
+    List<FeuillemMaladieResponseDTO> getFeuillesByAssure(Long assureId);
 }

@@ -37,4 +37,11 @@ public class FeuillemMaladieController {
     public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(feuillemMaladieService.getAllFeuillesMaladie());
     }
+
+    @GetMapping("/assure/{assureId}")
+    @PreAuthorize("hasRole('ORGANISME') or @securityService.isSelfAssure(principal, #assureId)")
+    @Operation(summary = "Récupérer les feuilles de maladie d'un assuré")
+    public ResponseEntity<?> getByAssure(@PathVariable Long assureId) {
+        return ResponseEntity.ok(feuillemMaladieService.getFeuillesByAssure(assureId));
+    }
 }

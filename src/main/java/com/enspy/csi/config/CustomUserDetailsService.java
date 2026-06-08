@@ -23,12 +23,26 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final MedecinRepository medecinRepository;
     private final @Lazy PasswordEncoder passwordEncoder;
 
+    private final java.util.concurrent.ConcurrentHashMap<String, String> registeredOrganismes = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public void registerOrganisme(String username, String rawPassword) {
+        registeredOrganismes.put(username.toLowerCase(), passwordEncoder.encode(rawPassword));
+    }
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // 1. Organisme agent
         if ("agent".equalsIgnoreCase(username) || "admin".equalsIgnoreCase(username)) {
             return User.withUsername(username)
                     .password(passwordEncoder.encode("password"))
+                    .roles("ORGANISME")
+                    .build();
+        }
+
+        // 1b. Registered Organisme
+        if (registeredOrganismes.containsKey(username.toLowerCase())) {
+            return User.withUsername(username)
+                    .password(registeredOrganismes.get(username.toLowerCase()))
                     .roles("ORGANISME")
                     .build();
         }
