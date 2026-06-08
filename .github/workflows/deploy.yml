@@ -1,0 +1,115 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: ["main"]
+
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: securite_sociale_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+      - name: Run Tests
+        run: chmod +x mvnw && ./mvnw test
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: securite_sociale_db
+          DB_USERNAME: postgres
+          DB_PASSWORD: password
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_name: ${{ steps.lower.outputs.image }} # On exporte le nom en minuscule
+    steps:
+      - uses: actions/checkout@v4
+
+      # ÉTAPE CRUCIALE : On met le nom en minuscules ici
+      - name: Lowercase image name
+        id: lower
+        run: echo "image=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ steps.lower.outputs.image }}
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            # On définit le nom de l'image en minuscules pour le VPS aussi
+            IMAGE_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+            
+            cd ${{ secrets.DEPLOY_PATH || '~/csi' }}/csi
+            
+            # Connexion au registre sur le VPS pour avoir le droit de pull
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # On cherche quel fichier compose existe sur le VPS
+            if [ -f docker-compose.prod.yml ]; then
+              COMPOSE_FILE="docker-compose.prod.yml"
+            else
+              COMPOSE_FILE="docker-compose.yml"
+            fi
+            
+            # On passe la variable DOCKER_IMAGE directement à docker compose
+            DOCKER_IMAGE=${{ env.REGISTRY }}/$IMAGE_LOWER:latest docker compose -f $COMPOSE_FILE pull
+            DOCKER_IMAGE=${{ env.REGISTRY }}/$IMAGE_LOWER:latest docker compose -f $COMPOSE_FILE up -d
+            
+            docker image prune -f
