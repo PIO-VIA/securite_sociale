@@ -86,6 +86,18 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      # Copier le docker-compose.yml à jour sur le VPS
+      - name: Copy docker-compose.yml to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "docker-compose.yml"
+          target: ${{ secrets.DEPLOY_PATH || '~/csi' }}
+
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -95,21 +107,24 @@ jobs:
           script: |
             # On définit le nom de l'image en minuscules pour le VPS aussi
             IMAGE_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
-            
-            cd ${{ secrets.DEPLOY_PATH || '~/csi' }}/csi
-            
-            # Connexion au registre sur le VPS pour avoir le droit de pull
+            FULL_IMAGE=${{ env.REGISTRY }}/$IMAGE_LOWER:latest
+
+            # Aller dans le dossier de déploiement (sans /csi en doublon)
+            DEPLOY_DIR=${{ secrets.DEPLOY_PATH || '~/csi' }}
+            cd $DEPLOY_DIR
+
+            # Connexion au registre GHCR pour pouvoir pull l'image
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            
+
             # On cherche quel fichier compose existe sur le VPS
             if [ -f docker-compose.prod.yml ]; then
               COMPOSE_FILE="docker-compose.prod.yml"
             else
               COMPOSE_FILE="docker-compose.yml"
             fi
-            
-            # On passe la variable DOCKER_IMAGE directement à docker compose
-            DOCKER_IMAGE=${{ env.REGISTRY }}/$IMAGE_LOWER:latest docker compose -f $COMPOSE_FILE pull
-            DOCKER_IMAGE=${{ env.REGISTRY }}/$IMAGE_LOWER:latest docker compose -f $COMPOSE_FILE up -d
-            
+
+            # Pull la nouvelle image depuis GHCR puis relancer les services
+            DOCKER_IMAGE=$FULL_IMAGE docker compose -f $COMPOSE_FILE pull
+            DOCKER_IMAGE=$FULL_IMAGE docker compose -f $COMPOSE_FILE up -d
+
             docker image prune -f
