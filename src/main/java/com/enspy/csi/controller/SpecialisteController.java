@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,6 +19,7 @@ public class SpecialisteController {
     private final SpecialisteRepository specialisteRepository;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ORGANISME', 'MEDECIN', 'ASSURE')")
     @Operation(summary = "Lister tous les spécialistes")
     public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(medecinService.getAllMedecins()
@@ -27,12 +29,14 @@ public class SpecialisteController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ORGANISME', 'MEDECIN', 'ASSURE')")
     @Operation(summary = "Récupérer un spécialiste par ID")
     public ResponseEntity<?> getById(@PathVariable Long id) {
         return ResponseEntity.ok(medecinService.getMedecinById(id));
     }
 
     @GetMapping("/domaine/{domaine}")
+    @PreAuthorize("hasAnyRole('ORGANISME', 'MEDECIN', 'ASSURE')")
     @Operation(summary = "Filtrer les spécialistes par domaine")
     public ResponseEntity<?> getByDomaine(@PathVariable String domaine) {
         return ResponseEntity.ok(specialisteRepository.findByDomaineSpecialisation(domaine));

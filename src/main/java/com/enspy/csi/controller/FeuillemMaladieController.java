@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,18 +18,21 @@ public class FeuillemMaladieController {
     private final FeuillemMaladieService feuillemMaladieService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ORGANISME', 'MEDECIN')")
     @Operation(summary = "Enregistrer une feuille de maladie")
     public ResponseEntity<?> enregistrer(@RequestBody FeuillemMaladieRequestDTO dto) {
         return ResponseEntity.ok(feuillemMaladieService.enregistrerFeuilleMaladie(dto));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ORGANISME') or @securityService.isSelfAssureForFeuille(principal, #id)")
     @Operation(summary = "Récupérer une feuille de maladie par ID")
     public ResponseEntity<?> getById(@PathVariable Long id) {
         return ResponseEntity.ok(feuillemMaladieService.getFeuilleMaladieById(id));
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ORGANISME')")
     @Operation(summary = "Lister toutes les feuilles de maladie")
     public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(feuillemMaladieService.getAllFeuillesMaladie());

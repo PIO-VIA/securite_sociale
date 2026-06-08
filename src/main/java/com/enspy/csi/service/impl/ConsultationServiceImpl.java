@@ -66,10 +66,10 @@ public class ConsultationServiceImpl implements ConsultationService {
 
     @Override
     public List<ConsultationResponseDTO> getConsultationsByGeneraliste(Long generalisteId) {
-        if (!assureRepository.existsById(generalisteId)){
-            throw new IllegalArgumentException("Assure dont l'id est " +generalisteId+ " introuvable" );
+        if (!generalisteRepository.existsById(generalisteId)){
+            throw new IllegalArgumentException("Généraliste dont l'id est " +generalisteId+ " introuvable" );
         }
-        List<Consultation> consultations = consultationRepository.findByAssureId(generalisteId);
+        List<Consultation> consultations = consultationRepository.findByGeneralisteId(generalisteId);
         return consultations.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

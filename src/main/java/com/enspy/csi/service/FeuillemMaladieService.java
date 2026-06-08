@@ -8,4 +8,5 @@ public interface FeuillemMaladieService {
     FeuillemMaladieResponseDTO enregistrerFeuilleMaladie(FeuillemMaladieRequestDTO dto);
     FeuillemMaladieResponseDTO getFeuilleMaladieById(Long id);
     List<FeuillemMaladieResponseDTO> getAllFeuillesMaladie();
+    List<FeuillemMaladieResponseDTO> getFeuillesNonRemboursees();
 }
