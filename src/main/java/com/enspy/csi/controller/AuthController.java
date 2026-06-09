@@ -1,23 +1,25 @@
 package com.enspy.csi.controller;
 
 import com.enspy.csi.config.CustomUserDetailsService;
+import com.enspy.csi.dto.request.ChangePasswordRequestDTO;
 import com.enspy.csi.dto.request.LoginRequestDTO;
 import com.enspy.csi.dto.response.AuthResponseDTO;
+import com.enspy.csi.service.MedecinService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Base64;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -27,6 +29,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService customUserDetailsService;
+    private final MedecinService medecinService;
     private final com.enspy.csi.config.JwtUtil jwtUtil;
 
     @PostMapping("/login")
@@ -60,6 +63,14 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Identifiants incorrects : " + e.getMessage());
         }
+    }
+
+    @PatchMapping("/change-password")
+    @PreAuthorize("hasRole('MEDECIN')")
+    @Operation(summary = "Modifier son mot de passe (médecin connecté)")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequestDTO dto, Authentication authentication) {
+        medecinService.changerMotDePasse(authentication.getName(), dto);
+        return ResponseEntity.ok("Mot de passe modifié avec succès.");
     }
 
     @PostMapping("/register-organisme")

@@ -1,5 +1,6 @@
 package com.enspy.csi.service.impl;
 
+import com.enspy.csi.dto.request.ChangePasswordRequestDTO;
 import com.enspy.csi.dto.request.MedecinRequestDTO;
 import com.enspy.csi.dto.response.MedecinResponseDTO;
 import com.enspy.csi.entity.Generaliste;
@@ -9,7 +10,9 @@ import com.enspy.csi.exception.ResourceNotFoundException;
 import com.enspy.csi.repository.GeneralisteRepository;
 import com.enspy.csi.repository.MedecinRepository;
 import com.enspy.csi.repository.SpecialisteRepository;
+import com.enspy.csi.service.EmailService;
 import com.enspy.csi.service.MedecinService;
+import com.enspy.csi.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,49 +26,64 @@ public class MedecinServiceImpl implements MedecinService {
     private final MedecinRepository medecinRepository;
     private final GeneralisteRepository generalisteRepository;
     private final SpecialisteRepository specialisteRepository;
+    private final EmailService emailService;
     private final @org.springframework.context.annotation.Lazy org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Override
     public MedecinResponseDTO enregistrerMedecin(MedecinRequestDTO dto) {
+        if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+            throw new IllegalArgumentException("L'email est obligatoire pour créer un médecin.");
+        }
+
         String type = dto.getType();
         if (type == null) {
             throw new IllegalArgumentException("Type médecin invalide. Valeurs acceptées : GENERALISTE, SPECIALISTE");
         }
+
+        String motDePasseGenere = PasswordGenerator.generate();
+
         return switch (type.toUpperCase()) {
             case "GENERALISTE" -> {
                 Generaliste g = new Generaliste();
-                g.setNom(dto.getNom());
-                g.setDateNaissance(dto.getDateNaissance());
-                g.setSexe(dto.getSexe());
-                g.setIndicatifPays(dto.getIndicatifPays());
-                g.setNumTelephone(dto.getNumTelephone());
-                g.setMatricule(dto.getMatricule());
-                g.setEstAssure(dto.getEstAssure() != null ? dto.getEstAssure() : false);
-                g.setEmail(dto.getEmail());
-                if (dto.getMotDePasse() != null) {
-                    g.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
-                }
-                yield toDTO(generalisteRepository.save(g), "GENERALISTE");
+                remplirChampsCommuns(g, dto);
+                g.setMotDePasse(passwordEncoder.encode(motDePasseGenere));
+                Generaliste saved = generalisteRepository.save(g);
+                envoyerIdentifiants(saved, motDePasseGenere);
+                yield toDTO(saved, "GENERALISTE");
             }
             case "SPECIALISTE" -> {
                 Specialiste s = new Specialiste();
-                s.setNom(dto.getNom());
-                s.setDateNaissance(dto.getDateNaissance());
-                s.setSexe(dto.getSexe());
-                s.setIndicatifPays(dto.getIndicatifPays());
-                s.setNumTelephone(dto.getNumTelephone());
-                s.setMatricule(dto.getMatricule());
-                s.setEstAssure(dto.getEstAssure() != null ? dto.getEstAssure() : false);
+                remplirChampsCommuns(s, dto);
                 s.setDomaineSpecialisation(dto.getDomaineSpecialisation());
-                s.setEmail(dto.getEmail());
-                if (dto.getMotDePasse() != null) {
-                    s.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
-                }
-                yield toDTO(specialisteRepository.save(s), "SPECIALISTE");
+                s.setMotDePasse(passwordEncoder.encode(motDePasseGenere));
+                Specialiste saved = specialisteRepository.save(s);
+                envoyerIdentifiants(saved, motDePasseGenere);
+                yield toDTO(saved, "SPECIALISTE");
             }
             default -> throw new IllegalArgumentException(
                     "Type médecin invalide. Valeurs acceptées : GENERALISTE, SPECIALISTE");
         };
+    }
+
+    @Override
+    public void changerMotDePasse(String username, ChangePasswordRequestDTO dto) {
+        Medecin medecin = medecinRepository.findByEmail(username)
+                .or(() -> medecinRepository.findByMatricule(username))
+                .orElseThrow(() -> new ResourceNotFoundException("Médecin introuvable."));
+
+        if (dto.getAncienMotDePasse() == null || dto.getNouveauMotDePasse() == null) {
+            throw new IllegalArgumentException("L'ancien et le nouveau mot de passe sont obligatoires.");
+        }
+        if (dto.getNouveauMotDePasse().length() < 6) {
+            throw new IllegalArgumentException("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+        }
+        if (medecin.getMotDePasse() == null
+                || !passwordEncoder.matches(dto.getAncienMotDePasse(), medecin.getMotDePasse())) {
+            throw new IllegalArgumentException("Ancien mot de passe incorrect.");
+        }
+
+        medecin.setMotDePasse(passwordEncoder.encode(dto.getNouveauMotDePasse()));
+        medecinRepository.save(medecin);
     }
 
     @Override
@@ -80,6 +98,26 @@ public class MedecinServiceImpl implements MedecinService {
         return medecinRepository.findAll().stream()
                 .map(m -> toDTO(m, m instanceof Generaliste ? "GENERALISTE" : "SPECIALISTE"))
                 .collect(Collectors.toList());
+    }
+
+    private void remplirChampsCommuns(Medecin medecin, MedecinRequestDTO dto) {
+        medecin.setNom(dto.getNom());
+        medecin.setDateNaissance(dto.getDateNaissance());
+        medecin.setSexe(dto.getSexe());
+        medecin.setIndicatifPays(dto.getIndicatifPays());
+        medecin.setNumTelephone(dto.getNumTelephone());
+        medecin.setMatricule(dto.getMatricule());
+        medecin.setEstAssure(dto.getEstAssure() != null ? dto.getEstAssure() : false);
+        medecin.setEmail(dto.getEmail());
+    }
+
+    private void envoyerIdentifiants(Medecin medecin, String motDePasse) {
+        try {
+            emailService.envoyerMotDePasseMedecin(medecin.getEmail(), medecin.getNom(), motDePasse);
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "Médecin enregistré mais l'envoi de l'email a échoué : " + e.getMessage());
+        }
     }
 
     private MedecinResponseDTO toDTO(Medecin medecin, String type) {
