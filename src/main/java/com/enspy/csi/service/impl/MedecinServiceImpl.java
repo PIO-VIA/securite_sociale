@@ -114,6 +114,26 @@ public class MedecinServiceImpl implements MedecinService {
         }
     }
 
+    @Override
+    public MedecinResponseDTO resetMotDePasse(Long id) {
+        Medecin medecin = medecinRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Médecin introuvable avec l'id : " + id));
+
+        String nouveauMotDePasse = PasswordGenerator.generate();
+        medecin.setMotDePasse(passwordEncoder.encode(nouveauMotDePasse));
+        medecinRepository.save(medecin);
+
+        // Envoie le nouveau mot de passe par email
+        try {
+            emailService.envoyerMotDePasseMedecin(medecin.getEmail(), medecin.getNom(), nouveauMotDePasse);
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "Mot de passe réinitialisé en DB mais l'envoi de l'email a échoué : " + e.getMessage());
+        }
+
+        return toDTO(medecin, medecin instanceof Generaliste ? "GENERALISTE" : "SPECIALISTE");
+    }
+
     private void remplirChampsCommuns(Medecin medecin, MedecinRequestDTO dto) {
         medecin.setNom(dto.getNom());
         medecin.setDateNaissance(dto.getDateNaissance());

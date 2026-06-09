@@ -45,4 +45,11 @@ public class MedecinController {
         medecinService.supprimerMedecin(id);
         return ResponseEntity.ok("Médecin supprimé avec succès.");
     }
+
+    @PatchMapping("/{id}/reset-password")
+    @PreAuthorize("hasRole('ORGANISME')")
+    @Operation(summary = "Réinitialiser le mot de passe d'un médecin (envoie un nouveau par email)")
+    public ResponseEntity<?> resetPassword(@PathVariable Long id) {
+        return ResponseEntity.ok(medecinService.resetMotDePasse(id));
+    }
 }

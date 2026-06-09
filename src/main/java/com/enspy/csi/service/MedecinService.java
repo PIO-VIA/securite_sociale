@@ -11,4 +11,5 @@ public interface MedecinService {
     List<MedecinResponseDTO> getAllMedecins();
     void changerMotDePasse(String username, ChangePasswordRequestDTO dto);
     void supprimerMedecin(Long id);
+    MedecinResponseDTO resetMotDePasse(Long id);
 }

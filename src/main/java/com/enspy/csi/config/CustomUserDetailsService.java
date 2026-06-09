@@ -29,17 +29,21 @@ public class CustomUserDetailsService implements UserDetailsService {
         registeredOrganismes.put(username.toLowerCase(), passwordEncoder.encode(rawPassword));
     }
 
+    // Hash BCrypt statique de "password" — évite de recalculer à chaque appel
+    private static final String DEFAULT_ENCODED_PASSWORD =
+            "$2a$10$7EqJtq98hPqEX7fNZaFWoO5Ly5bYAe3vWZjC1lMCBGu.aJfTiEmEG";
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // 1. Organisme agent
+        // 1. Organisme agent par défaut
         if ("agent".equalsIgnoreCase(username) || "admin".equalsIgnoreCase(username)) {
             return User.withUsername(username)
-                    .password(passwordEncoder.encode("password"))
+                    .password(DEFAULT_ENCODED_PASSWORD)
                     .roles("ORGANISME")
                     .build();
         }
 
-        // 1b. Registered Organisme
+        // 1b. Organisme enregistré dynamiquement
         if (registeredOrganismes.containsKey(username.toLowerCase())) {
             return User.withUsername(username)
                     .password(registeredOrganismes.get(username.toLowerCase()))
