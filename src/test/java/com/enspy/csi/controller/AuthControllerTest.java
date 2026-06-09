@@ -37,19 +37,19 @@ public class AuthControllerTest {
     @Test
     public void registerAndLoginOrganisme_ShouldSucceed() throws Exception {
         // 1. Register a new organism agent
-        LoginRequestDTO registerDto = new LoginRequestDTO("new_agent", "secure_pass");
+        LoginRequestDTO registerDto = new LoginRequestDTO("new_agent@organisme.com", "secure_pass");
         mockMvc.perform(post("/api/auth/register-organisme")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerDto)))
                 .andExpect(status().isOk());
 
         // 2. Login with the registered agent
-        LoginRequestDTO loginDto = new LoginRequestDTO("new_agent", "secure_pass");
+        LoginRequestDTO loginDto = new LoginRequestDTO("new_agent@organisme.com", "secure_pass");
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("new_agent"))
+                .andExpect(jsonPath("$.username").value("new_agent@organisme.com"))
                 .andExpect(jsonPath("$.role").value("ROLE_ORGANISME"))
                 .andExpect(jsonPath("$.token").exists());
     }

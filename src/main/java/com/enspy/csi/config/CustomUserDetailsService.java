@@ -4,6 +4,7 @@ import com.enspy.csi.entity.Assure;
 import com.enspy.csi.entity.Medecin;
 import com.enspy.csi.repository.AssureRepository;
 import com.enspy.csi.repository.MedecinRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.User;
@@ -25,20 +26,24 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final java.util.concurrent.ConcurrentHashMap<String, String> registeredOrganismes = new java.util.concurrent.ConcurrentHashMap<>();
 
+    // Hash calculé une seule fois au démarrage — évite le recalcul à chaque appel
+    private String defaultEncodedPassword;
+
+    @PostConstruct
+    public void init() {
+        defaultEncodedPassword = passwordEncoder.encode("password");
+    }
+
     public void registerOrganisme(String username, String rawPassword) {
         registeredOrganismes.put(username.toLowerCase(), passwordEncoder.encode(rawPassword));
     }
-
-    // Hash BCrypt statique de "password" — évite de recalculer à chaque appel
-    private static final String DEFAULT_ENCODED_PASSWORD =
-            "$2a$10$7EqJtq98hPqEX7fNZaFWoO5Ly5bYAe3vWZjC1lMCBGu.aJfTiEmEG";
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // 1. Organisme agent par défaut
         if ("agent".equalsIgnoreCase(username) || "admin".equalsIgnoreCase(username)) {
             return User.withUsername(username)
-                    .password(DEFAULT_ENCODED_PASSWORD)
+                    .password(defaultEncodedPassword)
                     .roles("ORGANISME")
                     .build();
         }
@@ -55,7 +60,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         Optional<Medecin> medecinOpt = medecinRepository.findByEmail(username);
         if (medecinOpt.isPresent()) {
             Medecin medecin = medecinOpt.get();
-            String pwd = medecin.getMotDePasse() != null ? medecin.getMotDePasse() : passwordEncoder.encode("password");
+            String pwd = medecin.getMotDePasse() != null ? medecin.getMotDePasse() : defaultEncodedPassword;
             return User.withUsername(medecin.getEmail())
                     .password(pwd)
                     .roles("MEDECIN")
@@ -66,7 +71,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         Optional<Assure> assureOpt = assureRepository.findByEmail(username);
         if (assureOpt.isPresent()) {
             Assure assure = assureOpt.get();
-            String pwd = assure.getMotDePasse() != null ? assure.getMotDePasse() : passwordEncoder.encode("password");
+            String pwd = assure.getMotDePasse() != null ? assure.getMotDePasse() : defaultEncodedPassword;
             return User.withUsername(assure.getEmail())
                     .password(pwd)
                     .roles("ASSURE")
