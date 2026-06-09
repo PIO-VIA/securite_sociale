@@ -37,7 +37,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(dto.getUsername(), dto.getPassword())
+                    new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
             );
 
             String role = authentication.getAuthorities().stream()
@@ -50,10 +50,10 @@ public class AuthController {
                         .body("Rôle non autorisé pour cette interface. Seuls les médecins et l'organisme peuvent se connecter ici.");
             }
 
-            String token = jwtUtil.generateToken(dto.getUsername(), role);
+            String token = jwtUtil.generateToken(dto.getEmail(), role);
 
             return ResponseEntity.ok(AuthResponseDTO.builder()
-                    .username(dto.getUsername())
+                    .username(dto.getEmail())
                     .role(role)
                     .token(token)
                     .message("Connexion réussie")
@@ -76,13 +76,13 @@ public class AuthController {
     @PostMapping("/register-organisme")
     @Operation(summary = "Inscription d'un nouvel agent de l'organisme")
     public ResponseEntity<?> registerOrganisme(@RequestBody LoginRequestDTO dto) {
-        if (dto.getUsername() == null || dto.getUsername().trim().isEmpty() ||
+        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty() ||
             dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Le nom d'utilisateur et le mot de passe sont obligatoires.");
+            return ResponseEntity.badRequest().body("L'email et le mot de passe sont obligatoires.");
         }
         
         try {
-            customUserDetailsService.registerOrganisme(dto.getUsername(), dto.getPassword());
+            customUserDetailsService.registerOrganisme(dto.getEmail(), dto.getPassword());
             return ResponseEntity.ok("Agent de l'organisme enregistré avec succès !");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

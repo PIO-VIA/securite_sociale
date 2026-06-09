@@ -47,29 +47,23 @@ public class CustomUserDetailsService implements UserDetailsService {
                     .build();
         }
 
-        // 2. Doctor by email or matricule
+        // 2. Medecin par email uniquement
         Optional<Medecin> medecinOpt = medecinRepository.findByEmail(username);
-        if (!medecinOpt.isPresent()) {
-            medecinOpt = medecinRepository.findByMatricule(username);
-        }
         if (medecinOpt.isPresent()) {
             Medecin medecin = medecinOpt.get();
             String pwd = medecin.getMotDePasse() != null ? medecin.getMotDePasse() : passwordEncoder.encode("password");
-            return User.withUsername(medecin.getEmail() != null ? medecin.getEmail() : medecin.getMatricule())
+            return User.withUsername(medecin.getEmail())
                     .password(pwd)
                     .roles("MEDECIN")
                     .build();
         }
 
-        // 3. Patient by email or idAssure
+        // 3. Assure par email uniquement
         Optional<Assure> assureOpt = assureRepository.findByEmail(username);
-        if (!assureOpt.isPresent()) {
-            assureOpt = assureRepository.findByIdAssure(username);
-        }
         if (assureOpt.isPresent()) {
             Assure assure = assureOpt.get();
             String pwd = assure.getMotDePasse() != null ? assure.getMotDePasse() : passwordEncoder.encode("password");
-            return User.withUsername(assure.getEmail() != null ? assure.getEmail() : assure.getIdAssure())
+            return User.withUsername(assure.getEmail())
                     .password(pwd)
                     .roles("ASSURE")
                     .build();
