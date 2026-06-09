@@ -100,6 +100,20 @@ public class MedecinServiceImpl implements MedecinService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void supprimerMedecin(Long id) {
+        Medecin medecin = medecinRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Médecin introuvable avec l'id : " + id));
+
+        if (medecin instanceof Generaliste) {
+            generalisteRepository.deleteById(id);
+        } else if (medecin instanceof Specialiste) {
+            specialisteRepository.deleteById(id);
+        } else {
+            medecinRepository.deleteById(id);
+        }
+    }
+
     private void remplirChampsCommuns(Medecin medecin, MedecinRequestDTO dto) {
         medecin.setNom(dto.getNom());
         medecin.setDateNaissance(dto.getDateNaissance());

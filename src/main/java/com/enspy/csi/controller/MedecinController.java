@@ -37,4 +37,12 @@ public class MedecinController {
     public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(medecinService.getAllMedecins());
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ORGANISME')")
+    @Operation(summary = "Supprimer un médecin par ID")
+    public ResponseEntity<?> supprimer(@PathVariable Long id) {
+        medecinService.supprimerMedecin(id);
+        return ResponseEntity.ok("Médecin supprimé avec succès.");
+    }
 }
