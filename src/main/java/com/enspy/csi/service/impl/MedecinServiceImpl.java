@@ -101,6 +101,31 @@ public class MedecinServiceImpl implements MedecinService {
     }
 
     @Override
+    public MedecinResponseDTO modifierMedecin(Long id, MedecinRequestDTO dto) {
+        Medecin medecin = medecinRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Médecin introuvable avec l'id : " + id));
+
+        if (dto.getNom() != null) medecin.setNom(dto.getNom());
+        if (dto.getDateNaissance() != null) medecin.setDateNaissance(dto.getDateNaissance());
+        if (dto.getSexe() != null) medecin.setSexe(dto.getSexe());
+        if (dto.getIndicatifPays() != null) medecin.setIndicatifPays(dto.getIndicatifPays());
+        if (dto.getNumTelephone() != null) medecin.setNumTelephone(dto.getNumTelephone());
+        if (dto.getMatricule() != null) medecin.setMatricule(dto.getMatricule());
+        if (dto.getEstAssure() != null) medecin.setEstAssure(dto.getEstAssure());
+        if (dto.getEmail() != null) medecin.setEmail(dto.getEmail());
+        if (dto.getMotDePasse() != null && !dto.getMotDePasse().isBlank()) {
+            medecin.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
+        }
+
+        if (medecin instanceof Specialiste && dto.getDomaineSpecialisation() != null) {
+            ((Specialiste) medecin).setDomaineSpecialisation(dto.getDomaineSpecialisation());
+        }
+
+        Medecin saved = medecinRepository.save(medecin);
+        return toDTO(saved, saved instanceof Generaliste ? "GENERALISTE" : "SPECIALISTE");
+    }
+
+    @Override
     public void supprimerMedecin(Long id) {
         Medecin medecin = medecinRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Médecin introuvable avec l'id : " + id));

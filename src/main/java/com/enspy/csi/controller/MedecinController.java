@@ -38,6 +38,13 @@ public class MedecinController {
         return ResponseEntity.ok(medecinService.getAllMedecins());
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ORGANISME')")
+    @Operation(summary = "Modifier un médecin par ID")
+    public ResponseEntity<?> modifier(@PathVariable Long id, @RequestBody MedecinRequestDTO dto) {
+        return ResponseEntity.ok(medecinService.modifierMedecin(id, dto));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ORGANISME')")
     @Operation(summary = "Supprimer un médecin par ID")

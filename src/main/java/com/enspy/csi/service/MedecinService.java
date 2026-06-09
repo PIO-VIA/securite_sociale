@@ -9,6 +9,7 @@ public interface MedecinService {
     MedecinResponseDTO enregistrerMedecin(MedecinRequestDTO dto);
     MedecinResponseDTO getMedecinById(Long id);
     List<MedecinResponseDTO> getAllMedecins();
+    MedecinResponseDTO modifierMedecin(Long id, MedecinRequestDTO dto);
     void changerMotDePasse(String username, ChangePasswordRequestDTO dto);
     void supprimerMedecin(Long id);
     MedecinResponseDTO resetMotDePasse(Long id);
