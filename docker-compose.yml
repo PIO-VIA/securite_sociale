@@ -22,7 +22,6 @@ services:
 
   backend:
     image: ${DOCKER_IMAGE:-securite_sociale_backend:latest}
-    build: .
     container_name: securite_sociale_backend
     ports:
       - "8090:8090"
