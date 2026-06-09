@@ -26,12 +26,13 @@ public class SwaggerConfig {
                 .license(new License()
                     .name("ENSPY License")
                     .url("https://enspy.cm")))
-            .addSecurityItem(new SecurityRequirement().addList("BasicAuth"))
+            .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
             .components(new Components()
-                .addSecuritySchemes("BasicAuth", new SecurityScheme()
-                    .name("BasicAuth")
+                .addSecuritySchemes("BearerAuth", new SecurityScheme()
+                    .name("BearerAuth")
                     .type(SecurityScheme.Type.HTTP)
-                    .scheme("basic")
-                    .description("Authentification HTTP Basic (ex: 'agent'/'password', matricule/'password', idAssure/'password')")));
+                    .scheme("bearer")
+                    .bearerFormat("JWT")
+                    .description("Authentification par token JWT (Bearer token)")));
     }
 }
