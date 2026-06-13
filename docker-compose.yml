@@ -25,6 +25,8 @@ services:
     container_name: securite_sociale_backend
     ports:
       - "8090:8090"
+    env_file:
+      - .env
     environment:
       # Connexion à la base de données via le nom du service docker (db)
       - DB_HOST=db
