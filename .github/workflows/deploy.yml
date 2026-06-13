@@ -85,6 +85,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v4
 
@@ -100,22 +103,22 @@ jobs:
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          FULL_IMAGE: ${{ env.REGISTRY }}/${{ needs.build.outputs.image_name }}:latest
+          DEPLOY_DIR: ${{ secrets.DEPLOY_PATH || '~/csi' }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          envs: GITHUB_TOKEN,GITHUB_ACTOR,FULL_IMAGE,DEPLOY_DIR
           command_timeout: 30m
           script: |
-            # On définit le nom de l'image en minuscules pour le VPS aussi
-            IMAGE_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
-            FULL_IMAGE=${{ env.REGISTRY }}/$IMAGE_LOWER:latest
-
-            # Aller dans le dossier de déploiement (sans /csi en doublon)
-            DEPLOY_DIR=${{ secrets.DEPLOY_PATH || '~/csi' }}
             cd $DEPLOY_DIR
 
             # Connexion au registre GHCR pour pouvoir pull l'image
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
             # On cherche quel fichier compose existe sur le VPS
             if [ -f docker-compose.prod.yml ]; then
