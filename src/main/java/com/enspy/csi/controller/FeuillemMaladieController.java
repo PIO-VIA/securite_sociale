@@ -44,4 +44,19 @@ public class FeuillemMaladieController {
     public ResponseEntity<?> getByAssure(@PathVariable Long assureId) {
         return ResponseEntity.ok(feuillemMaladieService.getFeuillesByAssure(assureId));
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ORGANISME', 'MEDECIN')")
+    @Operation(summary = "Modifier une feuille de maladie")
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody FeuillemMaladieRequestDTO dto) {
+        return ResponseEntity.ok(feuillemMaladieService.modifierFeuilleMaladie(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ORGANISME')")
+    @Operation(summary = "Supprimer une feuille de maladie")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        feuillemMaladieService.supprimerFeuilleMaladie(id);
+        return ResponseEntity.noContent().build();
+    }
 }

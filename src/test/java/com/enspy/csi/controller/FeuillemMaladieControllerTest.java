@@ -24,6 +24,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -89,5 +91,25 @@ public class FeuillemMaladieControllerTest {
         mockMvc.perform(get("/api/feuilles-maladie/assure/1")
                 .with(user("patient").roles("ASSURE")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void update_WithDoctor_ShouldReturnOk() throws Exception {
+        FeuillemMaladieRequestDTO dto = new FeuillemMaladieRequestDTO();
+        when(feuillemMaladieService.modifierFeuilleMaladie(eq(1L), any(FeuillemMaladieRequestDTO.class)))
+                .thenReturn(new FeuillemMaladieResponseDTO());
+
+        mockMvc.perform(put("/api/feuilles-maladie/1")
+                .with(user("doctor").roles("MEDECIN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void delete_WithAgent_ShouldReturnNoContent() throws Exception {
+        mockMvc.perform(delete("/api/feuilles-maladie/1")
+                .with(user("agent").roles("ORGANISME")))
+                .andExpect(status().isNoContent());
     }
 }

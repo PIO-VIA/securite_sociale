@@ -68,6 +68,39 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public FeuillemMaladieResponseDTO modifierFeuilleMaladie(Long id, FeuillemMaladieRequestDTO dto) {
+        FeuillemMaladie fm = feuillemMaladieRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Feuille de maladie introuvable avec l'id : " + id));
+
+        if (dto.getIdFeuille() != null) {
+            fm.setIdFeuille(dto.getIdFeuille());
+        }
+        if (dto.getMontantSoin() != null) {
+            fm.setMontantSoin(dto.getMontantSoin());
+        }
+        if (dto.getConsultationId() != null) {
+            if (fm.getConsultation() == null || !fm.getConsultation().getId().equals(dto.getConsultationId())) {
+                Consultation consultation = consultationRepository.findById(dto.getConsultationId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Consultation introuvable avec l'id : " + dto.getConsultationId()));
+                if (feuillemMaladieRepository.existsByConsultationId(dto.getConsultationId())) {
+                    throw new IllegalStateException("Une feuille de maladie existe déjà pour cette consultation");
+                }
+                fm.setConsultation(consultation);
+            }
+        }
+
+        FeuillemMaladie saved = feuillemMaladieRepository.save(fm);
+        return toDTO(saved);
+    }
+
+    @Override
+    public void supprimerFeuilleMaladie(Long id) {
+        FeuillemMaladie fm = feuillemMaladieRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Feuille de maladie introuvable avec l'id : " + id));
+        feuillemMaladieRepository.delete(fm);
+    }
+
     private FeuillemMaladieResponseDTO toDTO(FeuillemMaladie fm) {
         FeuillemMaladieResponseDTO dto = new FeuillemMaladieResponseDTO();
         dto.setId(fm.getId());
