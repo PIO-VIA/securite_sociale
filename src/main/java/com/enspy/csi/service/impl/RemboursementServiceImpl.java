@@ -32,6 +32,11 @@ public class RemboursementServiceImpl implements RemboursementService {
             throw new IllegalStateException("Cette feuille de maladie a déjà été remboursée");
         }
 
+        if (feuille.getMontantSoin() == null || feuille.getMontantSoin() <= 0) {
+            throw new IllegalStateException(
+                    "Impossible de rembourser : le montant des soins de la feuille est invalide ou non défini.");
+        }
+
         if (modePaiement == null) {
             throw new IllegalArgumentException("Mode de paiement invalide. Valeurs acceptées : VIREMENT, CASH");
         }

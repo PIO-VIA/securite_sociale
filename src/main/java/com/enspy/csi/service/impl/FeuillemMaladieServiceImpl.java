@@ -30,6 +30,10 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
             throw new IllegalStateException("Une feuille de maladie existe déjà pour cette consultation");
         }
 
+        if (dto.getMontantSoin() == null || dto.getMontantSoin() <= 0) {
+            throw new IllegalArgumentException("Le montant des soins est obligatoire et doit être strictement positif.");
+        }
+
         FeuillemMaladie fm = new FeuillemMaladie();
         fm.setIdFeuille(dto.getIdFeuille());
         fm.setMontantSoin(dto.getMontantSoin());
@@ -77,6 +81,9 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
             fm.setIdFeuille(dto.getIdFeuille());
         }
         if (dto.getMontantSoin() != null) {
+            if (dto.getMontantSoin() <= 0) {
+                throw new IllegalArgumentException("Le montant des soins doit être strictement positif.");
+            }
             fm.setMontantSoin(dto.getMontantSoin());
         }
         if (dto.getConsultationId() != null) {
