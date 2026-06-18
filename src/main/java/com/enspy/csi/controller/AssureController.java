@@ -70,8 +70,8 @@ public class AssureController {
     }
 
     @PatchMapping("/{assureId}/choisir-medecin/{generalisteId}")
-    @PreAuthorize("hasRole('ORGANISME') or @securityService.isSelfAssure(principal, #assureId)")
-    @Operation(summary = "Choisir son médecin traitant")
+    @PreAuthorize("hasRole('ORGANISME')")
+    @Operation(summary = "Affecter un médecin traitant à un assuré")
     public ResponseEntity<?> choisirMedecin(
             @PathVariable Long assureId,
             @PathVariable Long generalisteId) {
