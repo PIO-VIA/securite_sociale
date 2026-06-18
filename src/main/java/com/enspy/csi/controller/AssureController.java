@@ -5,9 +5,11 @@ import com.enspy.csi.service.AssureService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/assures")
@@ -31,11 +33,25 @@ public class AssureController {
         return ResponseEntity.ok(assureService.getAssureById(id));
     }
 
+    @GetMapping("/by-identifiant/{idAssure}")
+    @PreAuthorize("hasAnyRole('ORGANISME', 'MEDECIN')")
+    @Operation(summary = "Récupérer un assuré par son identifiant (ex: ASS-XXXXXXXX)")
+    public ResponseEntity<?> getByIdAssure(@PathVariable String idAssure) {
+        return ResponseEntity.ok(assureService.getAssureByIdAssure(idAssure));
+    }
+
     @GetMapping
     @PreAuthorize("hasRole('ORGANISME')")
     @Operation(summary = "Lister tous les assurés")
     public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(assureService.getAllAssures());
+    }
+
+    @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ORGANISME') or @securityService.isSelfAssure(principal, #id)")
+    @Operation(summary = "Téléverser/mettre à jour la photo de profil d'un assuré (optionnel)")
+    public ResponseEntity<?> uploadPhoto(@PathVariable Long id, @RequestParam("photo") MultipartFile photo) {
+        return ResponseEntity.ok(assureService.uploadPhoto(id, photo));
     }
 
     @PutMapping("/{id}")

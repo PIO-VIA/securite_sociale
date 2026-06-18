@@ -22,6 +22,11 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
@@ -37,6 +42,12 @@ spring:
 app:
   mail:
     from: ${MAIL_FROM:csi@enspy.cm}
+  upload:
+    # Dossier physique de stockage des photos.
+    # Sur le VPS, définir UPLOAD_DIR (ex: /var/www/csi/uploads).
+    dir: ${UPLOAD_DIR:./uploads}
+    # Préfixe d'URL public exposant les photos.
+    base-url: ${UPLOAD_BASE_URL:/uploads}
 
 # Swagger / OpenAPI
 springdoc:

@@ -4,7 +4,7 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-public class MedecinResponseDTO {
+public class AgentResponseDTO {
     private Long id;
     private String nom;
     private LocalDate dateNaissance;
@@ -12,9 +12,8 @@ public class MedecinResponseDTO {
     private String indicatifPays;
     private String numTelephone;
     private String matricule;
-    private Boolean estAssure;
-    private String type;
-    private String domaineSpecialisation;
+    private String fonction;
     private String email;
     private String photoUrl;
+    private String role = "ORGANISME";
 }

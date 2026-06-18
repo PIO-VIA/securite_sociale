@@ -1,5 +1,6 @@
 package com.enspy.csi.controller;
 
+import com.enspy.csi.dto.request.AgentRequestDTO;
 import com.enspy.csi.dto.request.LoginRequestDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +38,10 @@ public class AuthControllerTest {
     @Test
     public void registerAndLoginOrganisme_ShouldSucceed() throws Exception {
         // 1. Register a new organism agent
-        LoginRequestDTO registerDto = new LoginRequestDTO("new_agent@organisme.com", "secure_pass");
+        AgentRequestDTO registerDto = new AgentRequestDTO();
+        registerDto.setEmail("new_agent@organisme.com");
+        registerDto.setMotDePasse("secure_pass");
+        registerDto.setNom("Nouvel Agent");
         mockMvc.perform(post("/api/auth/register-organisme")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerDto)))

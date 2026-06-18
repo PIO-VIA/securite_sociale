@@ -11,10 +11,12 @@ import com.enspy.csi.repository.GeneralisteRepository;
 import com.enspy.csi.repository.MedecinRepository;
 import com.enspy.csi.repository.SpecialisteRepository;
 import com.enspy.csi.service.EmailService;
+import com.enspy.csi.service.FileStorageService;
 import com.enspy.csi.service.MedecinService;
 import com.enspy.csi.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,6 +29,7 @@ public class MedecinServiceImpl implements MedecinService {
     private final GeneralisteRepository generalisteRepository;
     private final SpecialisteRepository specialisteRepository;
     private final EmailService emailService;
+    private final FileStorageService fileStorageService;
     private final @org.springframework.context.annotation.Lazy org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Override
@@ -94,6 +97,28 @@ public class MedecinServiceImpl implements MedecinService {
     }
 
     @Override
+    public MedecinResponseDTO getMedecinByEmail(String email) {
+        Medecin medecin = medecinRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Médecin introuvable avec l'email : " + email));
+        return toDTO(medecin, medecin instanceof Generaliste ? "GENERALISTE" : "SPECIALISTE");
+    }
+
+    @Override
+    public MedecinResponseDTO uploadPhoto(Long id, MultipartFile photo) {
+        Medecin medecin = medecinRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Médecin introuvable avec l'id : " + id));
+        String url = fileStorageService.stockerImage(photo, "medecins");
+        if (url != null) {
+            if (medecin.getPhotoUrl() != null) {
+                fileStorageService.supprimer(medecin.getPhotoUrl());
+            }
+            medecin.setPhotoUrl(url);
+            medecinRepository.save(medecin);
+        }
+        return toDTO(medecin, medecin instanceof Generaliste ? "GENERALISTE" : "SPECIALISTE");
+    }
+
+    @Override
     public List<MedecinResponseDTO> getAllMedecins() {
         return medecinRepository.findAll().stream()
                 .map(m -> toDTO(m, m instanceof Generaliste ? "GENERALISTE" : "SPECIALISTE"))
@@ -116,6 +141,8 @@ public class MedecinServiceImpl implements MedecinService {
         if (dto.getMotDePasse() != null && !dto.getMotDePasse().isBlank()) {
             medecin.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
         }
+
+        if (dto.getPhotoUrl() != null) medecin.setPhotoUrl(dto.getPhotoUrl());
 
         if (medecin instanceof Specialiste && dto.getDomaineSpecialisation() != null) {
             ((Specialiste) medecin).setDomaineSpecialisation(dto.getDomaineSpecialisation());
@@ -168,6 +195,7 @@ public class MedecinServiceImpl implements MedecinService {
         medecin.setMatricule(dto.getMatricule());
         medecin.setEstAssure(dto.getEstAssure() != null ? dto.getEstAssure() : false);
         medecin.setEmail(dto.getEmail());
+        medecin.setPhotoUrl(dto.getPhotoUrl());
     }
 
     private void envoyerIdentifiants(Medecin medecin, String motDePasse) {
@@ -183,10 +211,15 @@ public class MedecinServiceImpl implements MedecinService {
         MedecinResponseDTO dto = new MedecinResponseDTO();
         dto.setId(medecin.getId());
         dto.setNom(medecin.getNom());
+        dto.setDateNaissance(medecin.getDateNaissance());
+        dto.setSexe(medecin.getSexe());
+        dto.setIndicatifPays(medecin.getIndicatifPays());
+        dto.setNumTelephone(medecin.getNumTelephone());
         dto.setMatricule(medecin.getMatricule());
         dto.setEstAssure(medecin.getEstAssure());
         dto.setType(type);
         dto.setEmail(medecin.getEmail());
+        dto.setPhotoUrl(medecin.getPhotoUrl());
         if (medecin instanceof Specialiste s) {
             dto.setDomaineSpecialisation(s.getDomaineSpecialisation());
         }

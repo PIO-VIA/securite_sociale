@@ -34,4 +34,7 @@ public abstract class Personne {
 
     @Column(name = "mot_de_passe")
     private String motDePasse;
+
+    @Column(name = "photo_url")
+    private String photoUrl;
 }

@@ -54,7 +54,7 @@ public class SecurityConfig {
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .sessionManagement(session -> session.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/docs", "/docs/**", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**", "/api/auth/**").permitAll()
+                .requestMatchers("/docs", "/docs/**", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**", "/api/auth/**", "/uploads/**").permitAll()
                 .anyRequest().authenticated()
             )
             .httpBasic(Customizer.withDefaults())

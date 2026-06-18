@@ -1,7 +1,9 @@
 package com.enspy.csi.config;
 
+import com.enspy.csi.entity.Agent;
 import com.enspy.csi.entity.Assure;
 import com.enspy.csi.entity.Medecin;
+import com.enspy.csi.repository.AgentRepository;
 import com.enspy.csi.repository.AssureRepository;
 import com.enspy.csi.repository.MedecinRepository;
 import jakarta.annotation.PostConstruct;
@@ -22,9 +24,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final AssureRepository assureRepository;
     private final MedecinRepository medecinRepository;
+    private final AgentRepository agentRepository;
     private final @Lazy PasswordEncoder passwordEncoder;
-
-    private final java.util.concurrent.ConcurrentHashMap<String, String> registeredOrganismes = new java.util.concurrent.ConcurrentHashMap<>();
 
     // Hash calculé une seule fois au démarrage — évite le recalcul à chaque appel
     private String defaultEncodedPassword;
@@ -34,13 +35,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         defaultEncodedPassword = passwordEncoder.encode("password");
     }
 
-    public void registerOrganisme(String username, String rawPassword) {
-        registeredOrganismes.put(username.toLowerCase(), passwordEncoder.encode(rawPassword));
-    }
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // 1. Organisme agent par défaut
+        // 1. Compte organisme par défaut (bootstrap initial)
         if ("agent".equalsIgnoreCase(username) || "admin".equalsIgnoreCase(username)) {
             return User.withUsername(username)
                     .password(defaultEncodedPassword)
@@ -48,10 +45,13 @@ public class CustomUserDetailsService implements UserDetailsService {
                     .build();
         }
 
-        // 1b. Organisme enregistré dynamiquement
-        if (registeredOrganismes.containsKey(username.toLowerCase())) {
-            return User.withUsername(username)
-                    .password(registeredOrganismes.get(username.toLowerCase()))
+        // 1b. Agent de l'organisme persisté (par email)
+        Optional<Agent> agentOpt = agentRepository.findByEmail(username);
+        if (agentOpt.isPresent()) {
+            Agent agent = agentOpt.get();
+            String pwd = agent.getMotDePasse() != null ? agent.getMotDePasse() : defaultEncodedPassword;
+            return User.withUsername(agent.getEmail())
+                    .password(pwd)
                     .roles("ORGANISME")
                     .build();
         }

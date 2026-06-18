@@ -5,9 +5,11 @@ import com.enspy.csi.service.MedecinService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/medecins")
@@ -58,5 +60,12 @@ public class MedecinController {
     @Operation(summary = "Réinitialiser le mot de passe d'un médecin (envoie un nouveau par email)")
     public ResponseEntity<?> resetPassword(@PathVariable Long id) {
         return ResponseEntity.ok(medecinService.resetMotDePasse(id));
+    }
+
+    @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ORGANISME', 'MEDECIN')")
+    @Operation(summary = "Téléverser/mettre à jour la photo de profil d'un médecin (optionnel)")
+    public ResponseEntity<?> uploadPhoto(@PathVariable Long id, @RequestParam("photo") MultipartFile photo) {
+        return ResponseEntity.ok(medecinService.uploadPhoto(id, photo));
     }
 }

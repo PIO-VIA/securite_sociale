@@ -84,7 +84,16 @@ public class RemboursementServiceImpl implements RemboursementService {
         dto.setMontant(r.getMontant());
         dto.setDateRemboursement(r.getDateRemboursement());
         dto.setModePaiement(r.getModePaiement());
-        dto.setFeuilleMaladieId(r.getFeuilleMaladie() != null ? r.getFeuilleMaladie().getId() : null);
+
+        FeuillemMaladie feuille = r.getFeuilleMaladie();
+        if (feuille != null) {
+            dto.setFeuilleMaladieId(feuille.getId());
+            dto.setIdFeuille(feuille.getIdFeuille());
+            dto.setMontantSoin(feuille.getMontantSoin());
+            if (feuille.getConsultation() != null && feuille.getConsultation().getAssure() != null) {
+                dto.setAssureNom(feuille.getConsultation().getAssure().getNom());
+            }
+        }
         return dto;
     }
 }

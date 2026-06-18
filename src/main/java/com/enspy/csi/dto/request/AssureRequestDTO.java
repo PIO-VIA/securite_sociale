@@ -15,4 +15,5 @@ public class AssureRequestDTO {
     private String groupeSanguin;
     private String email;
     private String motDePasse;
+    private String photoUrl;
 }

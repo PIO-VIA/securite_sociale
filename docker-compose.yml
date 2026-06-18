@@ -35,6 +35,13 @@ services:
       - DB_USERNAME=${DB_USERNAME:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
       - SERVER_FORWARD_HEADERS_STRATEGY=native
+      # Dossier (dans le conteneur) où sont stockées les photos
+      - UPLOAD_DIR=/app/uploads
+      - UPLOAD_BASE_URL=${UPLOAD_BASE_URL:-/uploads}
+    volumes:
+      # Connecte le dossier des images du conteneur à un dossier persistant de l'hôte (VPS).
+      # Docker crée automatiquement le dossier hôte s'il n'existe pas.
+      - ${UPLOAD_HOST_DIR:-./uploads}:/app/uploads
     depends_on:
       db:
         condition: service_healthy

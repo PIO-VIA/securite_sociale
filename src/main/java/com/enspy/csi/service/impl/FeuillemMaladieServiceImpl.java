@@ -107,7 +107,20 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
         dto.setIdFeuille(fm.getIdFeuille());
         dto.setMontantSoin(fm.getMontantSoin());
         dto.setEstRembourse(fm.getEstRembourse());
-        dto.setConsultationId(fm.getConsultation() != null ? fm.getConsultation().getId() : null);
+
+        if (fm.getConsultation() != null) {
+            dto.setConsultationId(fm.getConsultation().getId());
+            dto.setConsultationDate(fm.getConsultation().getDate());
+            if (fm.getConsultation().getAssure() != null) {
+                dto.setAssureId(fm.getConsultation().getAssure().getId());
+                dto.setAssureNom(fm.getConsultation().getAssure().getNom());
+                dto.setAssureIdAssure(fm.getConsultation().getAssure().getIdAssure());
+            }
+        }
+
+        if (fm.getRemboursement() != null) {
+            dto.setMontantRembourse(fm.getRemboursement().getMontant());
+        }
         return dto;
     }
 }

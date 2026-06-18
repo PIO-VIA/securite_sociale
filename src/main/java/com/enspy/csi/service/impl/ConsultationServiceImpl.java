@@ -83,15 +83,19 @@ public class ConsultationServiceImpl implements ConsultationService {
 
         if (consultationSauvegardee.getAssure() != null) {
             dto.setAssureId(consultationSauvegardee.getAssure().getId());
-        } else {
-            dto.setAssureId(null);
+            dto.setAssureNom(consultationSauvegardee.getAssure().getNom());
+            dto.setAssureIdAssure(consultationSauvegardee.getAssure().getIdAssure());
         }
 
         if (consultationSauvegardee.getGeneraliste() != null) {
             dto.setGeneralisteId(consultationSauvegardee.getGeneraliste().getId());
-        } else {
-            dto.setGeneralisteId(null);
+            dto.setGeneralisteNom(consultationSauvegardee.getGeneraliste().getNom());
+            dto.setGeneralisteMatricule(consultationSauvegardee.getGeneraliste().getMatricule());
         }
+
+        dto.setNombrePrescriptions(
+                consultationSauvegardee.getPrescriptions() != null ? consultationSauvegardee.getPrescriptions().size() : 0);
+        dto.setPossedeFeuilleMaladie(consultationSauvegardee.getFeuilleMaladie() != null);
 
         return dto;
     }

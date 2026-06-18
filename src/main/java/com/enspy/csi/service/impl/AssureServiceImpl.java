@@ -8,8 +8,10 @@ import com.enspy.csi.exception.ResourceNotFoundException;
 import com.enspy.csi.repository.AssureRepository;
 import com.enspy.csi.repository.GeneralisteRepository;
 import com.enspy.csi.service.AssureService;
+import com.enspy.csi.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,6 +24,7 @@ public class AssureServiceImpl implements AssureService {
 
     private final AssureRepository assureRepository;
     private final GeneralisteRepository generalisteRepository;
+    private final FileStorageService fileStorageService;
     private final @org.springframework.context.annotation.Lazy org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Override
@@ -36,6 +39,7 @@ public class AssureServiceImpl implements AssureService {
         assure.setStatutMatrimoniale(dto.getStatutMatrimoniale());
         assure.setGroupeSanguin(dto.getGroupeSanguin());
         assure.setEmail(dto.getEmail());
+        assure.setPhotoUrl(dto.getPhotoUrl());
         if (dto.getMotDePasse() != null) {
             assure.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
         }
@@ -48,6 +52,20 @@ public class AssureServiceImpl implements AssureService {
     public AssureResponseDTO getAssureById(Long id) {
         Assure assure = assureRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Assuré introuvable avec l'id : " + id));
+        return toDTO(assure);
+    }
+
+    @Override
+    public AssureResponseDTO getAssureByEmail(String email) {
+        Assure assure = assureRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Assuré introuvable avec l'email : " + email));
+        return toDTO(assure);
+    }
+
+    @Override
+    public AssureResponseDTO getAssureByIdAssure(String idAssure) {
+        Assure assure = assureRepository.findByIdAssure(idAssure)
+                .orElseThrow(() -> new ResourceNotFoundException("Assuré introuvable avec l'identifiant : " + idAssure));
         return toDTO(assure);
     }
 
@@ -71,6 +89,7 @@ public class AssureServiceImpl implements AssureService {
         if (dto.getStatutMatrimoniale() != null) assure.setStatutMatrimoniale(dto.getStatutMatrimoniale());
         if (dto.getGroupeSanguin() != null) assure.setGroupeSanguin(dto.getGroupeSanguin());
         if (dto.getEmail() != null) assure.setEmail(dto.getEmail());
+        if (dto.getPhotoUrl() != null) assure.setPhotoUrl(dto.getPhotoUrl());
         if (dto.getMotDePasse() != null) assure.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
         return toDTO(assureRepository.save(assure));
     }
@@ -93,15 +112,44 @@ public class AssureServiceImpl implements AssureService {
         return toDTO(assureRepository.save(assure));
     }
 
+    @Override
+    public AssureResponseDTO uploadPhoto(Long id, MultipartFile photo) {
+        Assure assure = assureRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Assuré introuvable avec l'id : " + id));
+        String url = fileStorageService.stockerImage(photo, "assures");
+        if (url != null) {
+            if (assure.getPhotoUrl() != null) {
+                fileStorageService.supprimer(assure.getPhotoUrl());
+            }
+            assure.setPhotoUrl(url);
+            assureRepository.save(assure);
+        }
+        return toDTO(assure);
+    }
+
     private AssureResponseDTO toDTO(Assure assure) {
         AssureResponseDTO dto = new AssureResponseDTO();
         dto.setId(assure.getId());
         dto.setIdAssure(assure.getIdAssure());
         dto.setNom(assure.getNom());
         dto.setDateNaissance(assure.getDateNaissance());
+        dto.setSexe(assure.getSexe());
+        dto.setIndicatifPays(assure.getIndicatifPays());
+        dto.setNumTelephone(assure.getNumTelephone());
         dto.setProfession(assure.getProfession());
+        dto.setStatutMatrimoniale(assure.getStatutMatrimoniale());
         dto.setGroupeSanguin(assure.getGroupeSanguin());
         dto.setEmail(assure.getEmail());
+        dto.setDateInscription(assure.getDateInscription());
+        dto.setPhotoUrl(assure.getPhotoUrl());
+
+        if (assure.getMedecinTraitant() != null) {
+            dto.setMedecinTraitantId(assure.getMedecinTraitant().getId());
+            dto.setMedecinTraitantNom(assure.getMedecinTraitant().getNom());
+            dto.setMedecinTraitantMatricule(assure.getMedecinTraitant().getMatricule());
+        }
+
+        dto.setNombreConsultations(assure.getConsultations() != null ? assure.getConsultations().size() : 0);
         return dto;
     }
 }
