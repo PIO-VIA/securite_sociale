@@ -15,4 +15,5 @@ public interface AssureService {
     void deleteAssure(Long id);
     AssureResponseDTO choisirMedecin(Long assureId, Long generalisteId);
     AssureResponseDTO uploadPhoto(Long id, MultipartFile photo);
+    List<AssureResponseDTO> getAssuresByMedecinEmail(String email);
 }

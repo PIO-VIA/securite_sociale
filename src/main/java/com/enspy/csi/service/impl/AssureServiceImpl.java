@@ -113,6 +113,16 @@ public class AssureServiceImpl implements AssureService {
     }
 
     @Override
+    public List<AssureResponseDTO> getAssuresByMedecinEmail(String email) {
+        return generalisteRepository.findByEmail(email)
+                .map(generaliste -> assureRepository.findByMedecinTraitantId(generaliste.getId()).stream()
+                        .map(this::toDTO)
+                        .collect(Collectors.toList()))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Aucun médecin généraliste trouvé pour le compte connecté : " + email));
+    }
+
+    @Override
     public AssureResponseDTO uploadPhoto(Long id, MultipartFile photo) {
         Assure assure = assureRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Assuré introuvable avec l'id : " + id));

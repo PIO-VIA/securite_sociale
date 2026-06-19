@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,7 +26,7 @@ public class FeuillemMaladieController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ORGANISME') or @securityService.isSelfAssureForFeuille(principal, #id)")
+    @PreAuthorize("hasRole('ORGANISME') or @securityService.isMedecinOfFeuille(principal, #id) or @securityService.isSelfAssureForFeuille(principal, #id)")
     @Operation(summary = "Récupérer une feuille de maladie par ID")
     public ResponseEntity<?> getById(@PathVariable Long id) {
         return ResponseEntity.ok(feuillemMaladieService.getFeuilleMaladieById(id));
@@ -36,6 +37,13 @@ public class FeuillemMaladieController {
     @Operation(summary = "Lister toutes les feuilles de maladie")
     public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(feuillemMaladieService.getAllFeuillesMaladie());
+    }
+
+    @GetMapping("/medecin/me")
+    @PreAuthorize("hasRole('MEDECIN')")
+    @Operation(summary = "Lister les feuilles de maladie créées par le médecin connecté")
+    public ResponseEntity<?> getMesFeuilles(Authentication authentication) {
+        return ResponseEntity.ok(feuillemMaladieService.getFeuillesByMedecinEmail(authentication.getName()));
     }
 
     @GetMapping("/assure/{assureId}")

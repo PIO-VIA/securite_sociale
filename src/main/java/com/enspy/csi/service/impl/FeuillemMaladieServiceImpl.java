@@ -73,6 +73,13 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
     }
 
     @Override
+    public List<FeuillemMaladieResponseDTO> getFeuillesByMedecinEmail(String email) {
+        return feuillemMaladieRepository.findByConsultationGeneralisteEmail(email).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public FeuillemMaladieResponseDTO modifierFeuilleMaladie(Long id, FeuillemMaladieRequestDTO dto) {
         FeuillemMaladie fm = feuillemMaladieRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Feuille de maladie introuvable avec l'id : " + id));

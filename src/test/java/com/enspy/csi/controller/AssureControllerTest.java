@@ -109,12 +109,18 @@ public class AssureControllerTest {
     }
 
     @Test
-    public void choisirMedecin_WithSelf_ShouldReturnOk() throws Exception {
-        when(securityService.isSelfAssure(any(), eq(1L))).thenReturn(true);
+    public void choisirMedecin_WithAgent_ShouldReturnOk() throws Exception {
         when(assureService.choisirMedecin(1L, 2L)).thenReturn(new AssureResponseDTO());
 
         mockMvc.perform(patch("/api/assures/1/choisir-medecin/2")
-                .with(user("patient").roles("ASSURE")))
+                .with(user("agent").roles("ORGANISME")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void choisirMedecin_WithAssure_ShouldReturnForbidden() throws Exception {
+        mockMvc.perform(patch("/api/assures/1/choisir-medecin/2")
+                .with(user("patient").roles("ASSURE")))
+                .andExpect(status().isForbidden());
     }
 }

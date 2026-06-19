@@ -14,4 +14,6 @@ public interface FeuillemMaladieRepository extends JpaRepository<FeuillemMaladie
     boolean existsByConsultationId(Long consultationId);
     List<FeuillemMaladie> findByEstRembourse(Boolean estRembourse);
     List<FeuillemMaladie> findByConsultationAssureId(Long assureId);
+    List<FeuillemMaladie> findByConsultationGeneralisteId(Long generalisteId);
+    List<FeuillemMaladie> findByConsultationGeneralisteEmail(String email);
 }

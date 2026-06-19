@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface GeneralisteRepository extends JpaRepository<Generaliste, Long> {
     List<Generaliste> findByEstAssure(Boolean estAssure);
     Optional<Generaliste> findByMatricule(String matricule);
+    Optional<Generaliste> findByEmail(String email);
 }

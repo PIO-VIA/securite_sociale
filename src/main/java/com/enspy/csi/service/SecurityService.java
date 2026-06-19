@@ -55,6 +55,22 @@ public class SecurityService {
         return false;
     }
 
+    public boolean isMedecinOfFeuille(Object principal, Long feuilleId) {
+        if (!(principal instanceof UserDetails userDetails)) {
+            return false;
+        }
+        String username = userDetails.getUsername();
+        Optional<FeuillemMaladie> fmOpt = feuillemMaladieRepository.findById(feuilleId);
+        if (fmOpt.isEmpty()) {
+            return false;
+        }
+        FeuillemMaladie fm = fmOpt.get();
+        if (fm.getConsultation() != null && fm.getConsultation().getGeneraliste() != null) {
+            return username.equals(fm.getConsultation().getGeneraliste().getEmail());
+        }
+        return false;
+    }
+
     public boolean isSelfAssureForFeuille(Object principal, Long feuilleId) {
         if (!(principal instanceof UserDetails userDetails)) {
             return false;

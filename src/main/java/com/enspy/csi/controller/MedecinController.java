@@ -1,6 +1,7 @@
 package com.enspy.csi.controller;
 
 import com.enspy.csi.dto.request.MedecinRequestDTO;
+import com.enspy.csi.service.AssureService;
 import com.enspy.csi.service.MedecinService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,12 +20,20 @@ import org.springframework.web.multipart.MultipartFile;
 public class MedecinController {
 
     private final MedecinService medecinService;
+    private final AssureService assureService;
 
     @PostMapping
     @PreAuthorize("hasRole('ORGANISME')")
     @Operation(summary = "Enregistrer un nouveau médecin")
     public ResponseEntity<?> enregistrer(@RequestBody MedecinRequestDTO dto) {
         return ResponseEntity.ok(medecinService.enregistrerMedecin(dto));
+    }
+
+    @GetMapping("/me/assures")
+    @PreAuthorize("hasRole('MEDECIN')")
+    @Operation(summary = "Lister les assurés affectés au médecin connecté")
+    public ResponseEntity<?> getMesAssures(Authentication authentication) {
+        return ResponseEntity.ok(assureService.getAssuresByMedecinEmail(authentication.getName()));
     }
 
     @GetMapping("/{id}")
