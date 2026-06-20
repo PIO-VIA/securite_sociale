@@ -32,7 +32,7 @@ public class PrescriptionController {
     }
 
     @GetMapping("/consultation/{consultationId}")
-    @PreAuthorize("hasRole('ORGANISME','MEDECIN') or @securityService.isConsultationParticipant(principal, #consultationId)")
+    @PreAuthorize("hasRole('ORGANISME', 'MEDECIN')")
     @Operation(summary = "Lister toutes les prescriptions d'une consultation")
     public ResponseEntity<?> getByConsultation(@PathVariable Long consultationId) {
         return ResponseEntity.ok(prescriptionService.getPrescriptionsByConsultation(consultationId));
