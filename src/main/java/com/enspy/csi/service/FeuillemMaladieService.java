@@ -13,4 +13,5 @@ public interface FeuillemMaladieService {
     List<FeuillemMaladieResponseDTO> getFeuillesByMedecinEmail(String email);
     FeuillemMaladieResponseDTO modifierFeuilleMaladie(Long id, FeuillemMaladieRequestDTO dto);
     void supprimerFeuilleMaladie(Long id);
+    FeuillemMaladieResponseDTO annulerFeuilleMaladie(Long id);
 }

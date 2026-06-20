@@ -11,6 +11,9 @@ import lombok.*;
 @ToString(exclude = {"remboursement"})
 public class FeuillemMaladie {
 
+    public static final String STATUT_ACTIF = "ACTIF";
+    public static final String STATUT_ANNULE = "ANNULE";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,6 +26,9 @@ public class FeuillemMaladie {
 
     @Column(name = "est_rembourse")
     private Boolean estRembourse = false;
+
+    @Column(name = "statut")
+    private String statut = STATUT_ACTIF;
 
     @OneToOne
     @JoinColumn(name = "consultation_id")

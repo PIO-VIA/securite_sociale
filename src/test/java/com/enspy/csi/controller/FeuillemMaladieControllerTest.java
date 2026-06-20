@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -111,5 +112,14 @@ public class FeuillemMaladieControllerTest {
         mockMvc.perform(delete("/api/feuilles-maladie/1")
                 .with(user("agent").roles("ORGANISME")))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void annuler_WithAgent_ShouldReturnOk() throws Exception {
+        when(feuillemMaladieService.annulerFeuilleMaladie(1L)).thenReturn(new FeuillemMaladieResponseDTO());
+
+        mockMvc.perform(patch("/api/feuilles-maladie/1/annuler")
+                .with(user("agent").roles("ORGANISME")))
+                .andExpect(status().isOk());
     }
 }

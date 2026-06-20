@@ -4,6 +4,7 @@ import com.enspy.csi.dto.request.FeuillemMaladieRequestDTO;
 import com.enspy.csi.dto.response.FeuillemMaladieResponseDTO;
 import com.enspy.csi.entity.Consultation;
 import com.enspy.csi.entity.FeuillemMaladie;
+import com.enspy.csi.entity.Remboursement;
 import com.enspy.csi.exception.ResourceNotFoundException;
 import com.enspy.csi.repository.FeuillemMaladieRepository;
 import com.enspy.csi.repository.ConsultationRepository;
@@ -78,6 +79,7 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
     @Override
     public List<FeuillemMaladieResponseDTO> getFeuillesNonRemboursees() {
         return feuillemMaladieRepository.findByEstRembourse(false).stream()
+                .filter(fm -> !FeuillemMaladie.STATUT_ANNULE.equals(fm.getStatut()))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -132,12 +134,40 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
         feuillemMaladieRepository.delete(fm);
     }
 
+    @Override
+    @Transactional
+    public FeuillemMaladieResponseDTO annulerFeuilleMaladie(Long id) {
+        FeuillemMaladie fm = feuillemMaladieRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Feuille de maladie introuvable avec l'id : " + id));
+
+        if (Boolean.TRUE.equals(fm.getEstRembourse())) {
+            throw new IllegalStateException("Impossible d'annuler une feuille de maladie déjà remboursée.");
+        }
+
+        if (FeuillemMaladie.STATUT_ANNULE.equals(fm.getStatut())) {
+            throw new IllegalStateException("Cette feuille de maladie est déjà annulée.");
+        }
+
+        fm.setStatut(FeuillemMaladie.STATUT_ANNULE);
+
+        if (fm.getRemboursement() != null) {
+            Remboursement remboursement = fm.getRemboursement();
+            if (Remboursement.STATUT_EN_ATTENTE.equals(remboursement.getStatut())) {
+                remboursement.setStatut(Remboursement.STATUT_ANNULE);
+            }
+        }
+
+        FeuillemMaladie saved = feuillemMaladieRepository.save(fm);
+        return toDTO(saved);
+    }
+
     private FeuillemMaladieResponseDTO toDTO(FeuillemMaladie fm) {
         FeuillemMaladieResponseDTO dto = new FeuillemMaladieResponseDTO();
         dto.setId(fm.getId());
         dto.setIdFeuille(fm.getIdFeuille());
         dto.setMontantSoin(fm.getMontantSoin());
         dto.setEstRembourse(fm.getEstRembourse());
+        dto.setStatut(fm.getStatut());
 
         if (fm.getConsultation() != null) {
             dto.setConsultationId(fm.getConsultation().getId());

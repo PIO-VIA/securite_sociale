@@ -18,4 +18,5 @@ public class FeuillemMaladieResponseDTO {
     // Champs remboursement enrichis — évite tout second appel réseau depuis le frontend
     private LocalDate dateRemboursement;
     private String modePaiement;
+    private String statut;
 }

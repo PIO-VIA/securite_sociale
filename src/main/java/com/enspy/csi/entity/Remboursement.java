@@ -13,6 +13,7 @@ public class Remboursement {
 
     public static final String STATUT_EN_ATTENTE = "EN_ATTENTE";
     public static final String STATUT_EFFECTUE = "EFFECTUE";
+    public static final String STATUT_ANNULE = "ANNULE";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

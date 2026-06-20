@@ -67,4 +67,11 @@ public class FeuillemMaladieController {
         feuillemMaladieService.supprimerFeuilleMaladie(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/annuler")
+    @PreAuthorize("hasRole('ORGANISME')")
+    @Operation(summary = "Annuler une feuille de maladie (agent)")
+    public ResponseEntity<?> annuler(@PathVariable Long id) {
+        return ResponseEntity.ok(feuillemMaladieService.annulerFeuilleMaladie(id));
+    }
 }
