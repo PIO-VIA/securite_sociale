@@ -9,6 +9,7 @@ public class RemboursementResponseDTO {
     private Double montant;
     private LocalDate dateRemboursement;
     private String modePaiement;
+    private String statut;
     private Long feuilleMaladieId;
     private String idFeuille;
     private Double montantSoin;

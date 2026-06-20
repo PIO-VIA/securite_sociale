@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -50,10 +50,10 @@ public class RemboursementControllerTest {
     }
 
     @Test
-    public void effectuerRemboursement_WithAgent_ShouldReturnOk() throws Exception {
-        when(remboursementService.effectuerRemboursement(1L, "CASH")).thenReturn(new RemboursementResponseDTO());
+    public void confirmerRemboursement_WithAgent_ShouldReturnOk() throws Exception {
+        when(remboursementService.confirmerRemboursement(1L, "CASH")).thenReturn(new RemboursementResponseDTO());
 
-        mockMvc.perform(post("/api/remboursements/1")
+        mockMvc.perform(patch("/api/remboursements/1/confirmer")
                 .param("modePaiement", "CASH")
                 .with(user("agent").roles("ORGANISME")))
                 .andExpect(status().isOk());

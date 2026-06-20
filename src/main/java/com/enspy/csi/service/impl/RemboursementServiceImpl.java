@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +26,29 @@ public class RemboursementServiceImpl implements RemboursementService {
 
     @Override
     @Transactional
-    public RemboursementResponseDTO effectuerRemboursement(Long feuilleMaladieId, String modePaiement) {
+    public RemboursementResponseDTO initierRemboursement(Long feuilleMaladieId) {
+        FeuillemMaladie feuille = feuillemMaladieRepository.findById(feuilleMaladieId)
+                .orElseThrow(() -> new ResourceNotFoundException("Feuille de maladie introuvable avec l'id : " + feuilleMaladieId));
+
+        // Idempotent : si un remboursement existe déjà pour cette feuille, on le renvoie
+        Remboursement existant = remboursementRepository.findByFeuilleMaladieId(feuilleMaladieId).orElse(null);
+        if (existant != null) {
+            return toDTO(existant);
+        }
+
+        Remboursement remboursement = new Remboursement();
+        remboursement.setMontant(calculerMontant(feuille));
+        remboursement.setStatut(Remboursement.STATUT_EN_ATTENTE);
+        remboursement.setFeuilleMaladie(feuille);
+
+        Remboursement saved = remboursementRepository.save(remboursement);
+        feuille.setRemboursement(saved);
+        return toDTO(saved);
+    }
+
+    @Override
+    @Transactional
+    public RemboursementResponseDTO confirmerRemboursement(Long feuilleMaladieId, String modePaiement) {
         FeuillemMaladie feuille = feuillemMaladieRepository.findById(feuilleMaladieId)
                 .orElseThrow(() -> new ResourceNotFoundException("Feuille de maladie introuvable avec l'id : " + feuilleMaladieId));
 
@@ -45,28 +69,29 @@ public class RemboursementServiceImpl implements RemboursementService {
             throw new IllegalArgumentException("Mode de paiement invalide. Valeurs acceptées : VIREMENT, CASH");
         }
 
-        double taux = 1.0;
-        if (feuille.getConsultation() != null) {
-            Long consultationId = feuille.getConsultation().getId();
-            var specialistPrescriptions = prescriptionRepository.findConsultationsByConsultationId(consultationId);
-            if (!specialistPrescriptions.isEmpty()) {
-                taux = 0.8;
-            }
+        // Récupère le remboursement initié à la création de la feuille, ou le crée si absent (robustesse)
+        Remboursement remboursement = remboursementRepository.findByFeuilleMaladieId(feuilleMaladieId)
+                .orElseGet(() -> {
+                    Remboursement r = new Remboursement();
+                    r.setStatut(Remboursement.STATUT_EN_ATTENTE);
+                    r.setFeuilleMaladie(feuille);
+                    return r;
+                });
+
+        if (Remboursement.STATUT_EFFECTUE.equals(remboursement.getStatut())) {
+            throw new IllegalStateException("Ce remboursement a déjà été confirmé.");
         }
 
-        double montantRembourse = feuille.getMontantSoin() * taux;
-
-        Remboursement remboursement = new Remboursement();
-        remboursement.setMontant(montantRembourse);
-        remboursement.setDateRemboursement(LocalDate.now());
+        // Recalcule le montant final (reflète une éventuelle orientation spécialiste ajoutée depuis)
+        remboursement.setMontant(calculerMontant(feuille));
         remboursement.setModePaiement(normalizedMode);
-        remboursement.setFeuilleMaladie(feuille);
+        remboursement.setDateRemboursement(LocalDate.now());
+        remboursement.setStatut(Remboursement.STATUT_EFFECTUE);
 
         feuille.setEstRembourse(true);
         feuillemMaladieRepository.save(feuille);
 
         Remboursement saved = remboursementRepository.save(remboursement);
-
         return toDTO(saved);
     }
 
@@ -78,9 +103,33 @@ public class RemboursementServiceImpl implements RemboursementService {
     }
 
     @Override
+    public List<RemboursementResponseDTO> getRemboursementsEnAttente() {
+        return remboursementRepository.findByStatut(Remboursement.STATUT_EN_ATTENTE).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Double getTotalRemboursements() {
         Double total = remboursementRepository.sumTotalRemboursements();
         return total != null ? total : 0.0;
+    }
+
+    /**
+     * Calcule le montant remboursable d'une feuille : 100% par défaut,
+     * 80% si la consultation comporte une orientation vers un spécialiste.
+     */
+    private double calculerMontant(FeuillemMaladie feuille) {
+        double taux = 1.0;
+        if (feuille.getConsultation() != null) {
+            Long consultationId = feuille.getConsultation().getId();
+            var specialistPrescriptions = prescriptionRepository.findConsultationsByConsultationId(consultationId);
+            if (!specialistPrescriptions.isEmpty()) {
+                taux = 0.8;
+            }
+        }
+        Double montantSoin = feuille.getMontantSoin();
+        return (montantSoin != null ? montantSoin : 0.0) * taux;
     }
 
     private RemboursementResponseDTO toDTO(Remboursement r) {
@@ -89,6 +138,7 @@ public class RemboursementServiceImpl implements RemboursementService {
         dto.setMontant(r.getMontant());
         dto.setDateRemboursement(r.getDateRemboursement());
         dto.setModePaiement(r.getModePaiement());
+        dto.setStatut(r.getStatut());
 
         FeuillemMaladie feuille = r.getFeuilleMaladie();
         if (feuille != null) {

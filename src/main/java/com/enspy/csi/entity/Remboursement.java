@@ -11,6 +11,9 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class Remboursement {
 
+    public static final String STATUT_EN_ATTENTE = "EN_ATTENTE";
+    public static final String STATUT_EFFECTUE = "EFFECTUE";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,6 +25,9 @@ public class Remboursement {
 
     @Column(name = "mode_paiement")
     private String modePaiement;
+
+    @Column(name = "statut")
+    private String statut = STATUT_EN_ATTENTE;
 
     @OneToOne
     @JoinColumn(name = "feuille_maladie_id")

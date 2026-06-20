@@ -8,8 +8,10 @@ import com.enspy.csi.exception.ResourceNotFoundException;
 import com.enspy.csi.repository.FeuillemMaladieRepository;
 import com.enspy.csi.repository.ConsultationRepository;
 import com.enspy.csi.service.FeuillemMaladieService;
+import com.enspy.csi.service.RemboursementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,8 +22,10 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
 
     private final FeuillemMaladieRepository feuillemMaladieRepository;
     private final ConsultationRepository consultationRepository;
+    private final RemboursementService remboursementService;
 
     @Override
+    @Transactional
     public FeuillemMaladieResponseDTO enregistrerFeuilleMaladie(FeuillemMaladieRequestDTO dto) {
         Consultation consultation = consultationRepository.findById(dto.getConsultationId())
                 .orElseThrow(() -> new ResourceNotFoundException("Consultation introuvable avec l'id : " + dto.getConsultationId()));
@@ -41,6 +45,11 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
         fm.setConsultation(consultation);
 
         FeuillemMaladie saved = feuillemMaladieRepository.save(fm);
+
+        // Initie automatiquement le remboursement au statut EN_ATTENTE.
+        // L'agent le confirmera ensuite (mode de paiement + passage au statut EFFECTUE).
+        remboursementService.initierRemboursement(saved.getId());
+
         return toDTO(saved);
     }
 

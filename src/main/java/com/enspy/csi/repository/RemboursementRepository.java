@@ -14,8 +14,9 @@ import java.util.Optional;
 public interface RemboursementRepository extends JpaRepository<Remboursement, Long> {
     Optional<Remboursement> findByFeuilleMaladieId(Long feuilleMaladieId);
     List<Remboursement> findByModePaiement(String modePaiement);
+    List<Remboursement> findByStatut(String statut);
 
-    @Query("SELECT SUM(r.montant) FROM Remboursement r")
+    @Query("SELECT SUM(r.montant) FROM Remboursement r WHERE r.statut = 'EFFECTUE'")
     Double sumTotalRemboursements();
 
     @Query("SELECT SUM(r.montant) FROM Remboursement r WHERE r.dateRemboursement BETWEEN :debut AND :fin")

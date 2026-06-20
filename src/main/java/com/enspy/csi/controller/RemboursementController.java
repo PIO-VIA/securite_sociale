@@ -18,13 +18,20 @@ public class RemboursementController {
     private final RemboursementService remboursementService;
     private final FeuillemMaladieService feuillemMaladieService;
 
-    @PostMapping("/{feuilleMaladieId}")
+    @PatchMapping("/{feuilleMaladieId}/confirmer")
     @PreAuthorize("hasRole('ORGANISME')")
-    @Operation(summary = "Effectuer un remboursement")
-    public ResponseEntity<?> effectuer(
+    @Operation(summary = "Confirmer le remboursement d'une feuille (agent) : définit le mode de paiement et passe le statut à EFFECTUE")
+    public ResponseEntity<?> confirmer(
             @PathVariable Long feuilleMaladieId,
             @RequestParam String modePaiement) {
-        return ResponseEntity.ok(remboursementService.effectuerRemboursement(feuilleMaladieId, modePaiement));
+        return ResponseEntity.ok(remboursementService.confirmerRemboursement(feuilleMaladieId, modePaiement));
+    }
+
+    @GetMapping("/en-attente")
+    @PreAuthorize("hasRole('ORGANISME')")
+    @Operation(summary = "Lister les remboursements en attente de confirmation")
+    public ResponseEntity<?> getEnAttente() {
+        return ResponseEntity.ok(remboursementService.getRemboursementsEnAttente());
     }
 
     @GetMapping("/{id}")
