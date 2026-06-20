@@ -8,6 +8,7 @@ public interface RemboursementService {
     RemboursementResponseDTO initierRemboursement(Long feuilleMaladieId);
     RemboursementResponseDTO confirmerRemboursement(Long feuilleMaladieId, String modePaiement);
     RemboursementResponseDTO getRemboursementById(Long id);
+    RemboursementResponseDTO getByFeuilleMaladieId(Long feuilleMaladieId);
     List<RemboursementResponseDTO> getRemboursementsEnAttente();
     Double getTotalRemboursements();
 }

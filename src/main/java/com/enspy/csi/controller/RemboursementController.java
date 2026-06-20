@@ -27,6 +27,13 @@ public class RemboursementController {
         return ResponseEntity.ok(remboursementService.confirmerRemboursement(feuilleMaladieId, modePaiement));
     }
 
+    @GetMapping("/by-feuille/{feuilleMaladieId}")
+    @PreAuthorize("hasRole('ORGANISME') or @securityService.isSelfAssureForFeuille(principal, #feuilleMaladieId)")
+    @Operation(summary = "Récupérer le remboursement associé à une feuille de maladie via l'ID de la feuille")
+    public ResponseEntity<?> getByFeuille(@PathVariable Long feuilleMaladieId) {
+        return ResponseEntity.ok(remboursementService.getByFeuilleMaladieId(feuilleMaladieId));
+    }
+
     @GetMapping("/en-attente")
     @PreAuthorize("hasRole('ORGANISME')")
     @Operation(summary = "Lister les remboursements en attente de confirmation")

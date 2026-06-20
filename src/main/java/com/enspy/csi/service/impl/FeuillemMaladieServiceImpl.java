@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,7 +41,13 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
         }
 
         FeuillemMaladie fm = new FeuillemMaladie();
-        fm.setIdFeuille(dto.getIdFeuille());
+        // Amélioration #4 : génération automatique de idFeuille si non fourni par le frontend
+        if (dto.getIdFeuille() == null || dto.getIdFeuille().isBlank()) {
+            fm.setIdFeuille("FM-" + LocalDate.now().getYear() + "-"
+                    + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        } else {
+            fm.setIdFeuille(dto.getIdFeuille());
+        }
         fm.setMontantSoin(dto.getMontantSoin());
         fm.setEstRembourse(false);
         fm.setConsultation(consultation);
@@ -143,6 +151,8 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
 
         if (fm.getRemboursement() != null) {
             dto.setMontantRembourse(fm.getRemboursement().getMontant());
+            dto.setDateRemboursement(fm.getRemboursement().getDateRemboursement());
+            dto.setModePaiement(fm.getRemboursement().getModePaiement());
         }
         return dto;
     }

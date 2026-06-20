@@ -103,6 +103,14 @@ public class RemboursementServiceImpl implements RemboursementService {
     }
 
     @Override
+    public RemboursementResponseDTO getByFeuilleMaladieId(Long feuilleMaladieId) {
+        Remboursement r = remboursementRepository.findByFeuilleMaladieId(feuilleMaladieId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Aucun remboursement trouvé pour la feuille de maladie id : " + feuilleMaladieId));
+        return toDTO(r);
+    }
+
+    @Override
     public List<RemboursementResponseDTO> getRemboursementsEnAttente() {
         return remboursementRepository.findByStatut(Remboursement.STATUT_EN_ATTENTE).stream()
                 .map(this::toDTO)

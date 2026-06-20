@@ -31,7 +31,8 @@ public class ConsultationServiceImpl implements ConsultationService {
         Generaliste generaliste = generalisteRepository.findById(dto.getGeneralisteId()).orElseThrow(() -> new IllegalArgumentException("Medecin generaliste introuvable avec l'ID: "+dto.getGeneralisteId()));
 
         if (assure.getMedecinTraitant() == null || !assure.getMedecinTraitant().getId().equals(generaliste.getId())){
-            throw new IllegalStateException("Erreur: L'assure doit consulter son medecin traitant");
+            // Violation de règle métier : renvoie 400 BAD REQUEST (pas 500)
+            throw new IllegalArgumentException("Erreur: L'assure doit consulter son medecin traitant");
         }
         Consultation consultation = new Consultation();
         consultation.setAssure(assure);
