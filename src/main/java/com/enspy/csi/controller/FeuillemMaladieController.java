@@ -26,14 +26,14 @@ public class FeuillemMaladieController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ORGANISME') or @securityService.isMedecinOfFeuille(principal, #id) or @securityService.isSelfAssureForFeuille(principal, #id)")
+    @PreAuthorize("hasAnyRole('ORGANISME', 'MEDECIN') or @securityService.isSelfAssureForFeuille(principal, #id)")
     @Operation(summary = "Récupérer une feuille de maladie par ID")
     public ResponseEntity<?> getById(@PathVariable Long id) {
         return ResponseEntity.ok(feuillemMaladieService.getFeuilleMaladieById(id));
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ORGANISME')")
+    @PreAuthorize("hasAnyRole('ORGANISME', 'MEDECIN')")
     @Operation(summary = "Lister toutes les feuilles de maladie")
     public ResponseEntity<?> getAll() {
         return ResponseEntity.ok(feuillemMaladieService.getAllFeuillesMaladie());
@@ -47,7 +47,7 @@ public class FeuillemMaladieController {
     }
 
     @GetMapping("/assure/{assureId}")
-    @PreAuthorize("hasRole('ORGANISME') or @securityService.isSelfAssure(principal, #assureId)")
+    @PreAuthorize("hasAnyRole('ORGANISME', 'MEDECIN') or @securityService.isSelfAssure(principal, #assureId)")
     @Operation(summary = "Récupérer les feuilles de maladie d'un assuré")
     public ResponseEntity<?> getByAssure(@PathVariable Long assureId) {
         return ResponseEntity.ok(feuillemMaladieService.getFeuillesByAssure(assureId));
