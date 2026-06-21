@@ -51,7 +51,7 @@ public class MedecinController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ORGANISME', 'MEDECIN')")
+    @PreAuthorize("hasAnyRole('ORGANISME', 'MEDECIN')")
     @Operation(summary = "Modifier un médecin par ID")
     public ResponseEntity<?> modifier(@PathVariable Long id, @RequestBody MedecinRequestDTO dto) {
         return ResponseEntity.ok(medecinService.modifierMedecin(id, dto));
