@@ -8,4 +8,6 @@ public interface PrescriptionService {
     PrescriptionResponseDTO ajouterPrescriptionMedicament(PrescriptionRequestDTO dto);
     PrescriptionResponseDTO ajouterPrescriptionConsultation(PrescriptionRequestDTO dto);
     List<PrescriptionResponseDTO> getPrescriptionsByConsultation(Long consultationId);
+    PrescriptionResponseDTO modifierPrescription(Long id, PrescriptionRequestDTO dto);
+    void supprimerPrescription(Long id);
 }

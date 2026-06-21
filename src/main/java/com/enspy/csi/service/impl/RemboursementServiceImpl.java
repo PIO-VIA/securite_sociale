@@ -159,4 +159,15 @@ public class RemboursementServiceImpl implements RemboursementService {
         }
         return dto;
     }
+
+    @Override
+    @Transactional
+    public void actualiserMontantRemboursement(Long feuilleMaladieId) {
+        remboursementRepository.findByFeuilleMaladieId(feuilleMaladieId).ifPresent(remboursement -> {
+            if (Remboursement.STATUT_EN_ATTENTE.equals(remboursement.getStatut())) {
+                remboursement.setMontant(calculerMontant(remboursement.getFeuilleMaladie()));
+                remboursementRepository.save(remboursement);
+            }
+        });
+    }
 }

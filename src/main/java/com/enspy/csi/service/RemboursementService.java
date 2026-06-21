@@ -11,4 +11,5 @@ public interface RemboursementService {
     RemboursementResponseDTO getByFeuilleMaladieId(Long feuilleMaladieId);
     List<RemboursementResponseDTO> getRemboursementsEnAttente();
     Double getTotalRemboursements();
+    void actualiserMontantRemboursement(Long feuilleMaladieId);
 }

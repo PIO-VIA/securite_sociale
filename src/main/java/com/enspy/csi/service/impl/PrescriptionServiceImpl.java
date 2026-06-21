@@ -6,6 +6,7 @@ import com.enspy.csi.entity.Consultation;
 import com.enspy.csi.entity.Prescription;
 import com.enspy.csi.entity.PrescriptionConsultation;
 import com.enspy.csi.entity.PrescriptionMedicament;
+import com.enspy.csi.exception.ResourceNotFoundException;
 import com.enspy.csi.repository.PrescriptionRepository;
 import com.enspy.csi.repository.ConsultationRepository;
 import com.enspy.csi.service.PrescriptionService;
@@ -89,6 +90,49 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         }
 
         return dto;
+    }
+
+    @Override
+    public PrescriptionResponseDTO modifierPrescription(Long id, PrescriptionRequestDTO dto) {
+        Prescription p = prescriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription introuvable avec l'ID : " + id));
+
+        if (dto.getConsultationId() != null) {
+            Consultation consultation = consultationRepository.findById(dto.getConsultationId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Consultation introuvable avec l'ID : " + dto.getConsultationId()));
+            p.setConsultation(consultation);
+        }
+
+        if (p instanceof PrescriptionMedicament) {
+            PrescriptionMedicament pm = (PrescriptionMedicament) p;
+            if (dto.getMedicament() != null) {
+                pm.setMedicament(dto.getMedicament());
+            }
+            if (dto.getPosologie() != null) {
+                pm.setPosologie(dto.getPosologie());
+            }
+        } else if (p instanceof PrescriptionConsultation) {
+            PrescriptionConsultation pc = (PrescriptionConsultation) p;
+            if (dto.getMatriculeMedecin() != null) {
+                if (dto.getMatriculeMedecin().trim().isEmpty()) {
+                    throw new IllegalArgumentException("Le matricule du médecin spécialiste est obligatoire pour une orientation.");
+                }
+                pc.setMatriculeMedecin(dto.getMatriculeMedecin());
+            }
+            if (dto.getMotif() != null) {
+                pc.setMotif(dto.getMotif());
+            }
+        }
+
+        Prescription saved = prescriptionRepository.save(p);
+        return toDTO(saved);
+    }
+
+    @Override
+    public void supprimerPrescription(Long id) {
+        Prescription p = prescriptionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription introuvable avec l'ID : " + id));
+        prescriptionRepository.delete(p);
     }
 
 }

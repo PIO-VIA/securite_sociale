@@ -37,4 +37,19 @@ public class PrescriptionController {
     public ResponseEntity<?> getByConsultation(@PathVariable Long consultationId) {
         return ResponseEntity.ok(prescriptionService.getPrescriptionsByConsultation(consultationId));
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('MEDECIN')")
+    @Operation(summary = "Modifier une prescription")
+    public ResponseEntity<?> modifier(@PathVariable Long id, @RequestBody PrescriptionRequestDTO dto) {
+        return ResponseEntity.ok(prescriptionService.modifierPrescription(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('MEDECIN')")
+    @Operation(summary = "Supprimer une prescription")
+    public ResponseEntity<?> supprimer(@PathVariable Long id) {
+        prescriptionService.supprimerPrescription(id);
+        return ResponseEntity.noContent().build();
+    }
 }

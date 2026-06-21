@@ -24,6 +24,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -82,5 +84,24 @@ public class PrescriptionControllerTest {
         mockMvc.perform(get("/api/prescriptions/consultation/1")
                 .with(user("patient").roles("ASSURE")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void modifier_WithDoctor_ShouldReturnOk() throws Exception {
+        PrescriptionRequestDTO dto = new PrescriptionRequestDTO();
+        when(prescriptionService.modifierPrescription(eq(1L), any(PrescriptionRequestDTO.class))).thenReturn(new PrescriptionResponseDTO());
+
+        mockMvc.perform(put("/api/prescriptions/1")
+                .with(user("doctor").roles("MEDECIN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void supprimer_WithDoctor_ShouldReturnNoContent() throws Exception {
+        mockMvc.perform(delete("/api/prescriptions/1")
+                .with(user("doctor").roles("MEDECIN")))
+                .andExpect(status().isNoContent());
     }
 }

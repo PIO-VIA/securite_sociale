@@ -99,6 +99,7 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
     }
 
     @Override
+    @Transactional
     public FeuillemMaladieResponseDTO modifierFeuilleMaladie(Long id, FeuillemMaladieRequestDTO dto) {
         FeuillemMaladie fm = feuillemMaladieRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Feuille de maladie introuvable avec l'id : " + id));
@@ -124,6 +125,10 @@ public class FeuillemMaladieServiceImpl implements FeuillemMaladieService {
         }
 
         FeuillemMaladie saved = feuillemMaladieRepository.save(fm);
+        remboursementService.actualiserMontantRemboursement(saved.getId());
+
+        // Re-fetch to ensure the DTO output reflects the recalculated reimbursement amount
+        saved = feuillemMaladieRepository.findById(saved.getId()).orElse(saved);
         return toDTO(saved);
     }
 
