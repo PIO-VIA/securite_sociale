@@ -10,4 +10,6 @@ public interface PrescriptionService {
     List<PrescriptionResponseDTO> getPrescriptionsByConsultation(Long consultationId);
     PrescriptionResponseDTO modifierPrescription(Long id, PrescriptionRequestDTO dto);
     void supprimerPrescription(Long id);
+    List<PrescriptionResponseDTO> getPrescriptionsForSpecialiste(String matricule);
+    List<PrescriptionResponseDTO> getPrescriptionsForSpecialisteEmail(String email);
 }

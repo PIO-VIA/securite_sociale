@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -51,5 +52,19 @@ public class PrescriptionController {
     public ResponseEntity<?> supprimer(@PathVariable Long id) {
         prescriptionService.supprimerPrescription(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/specialiste/me")
+    @PreAuthorize("hasRole('MEDECIN')")
+    @Operation(summary = "Lister les orientations (prescriptions de consultation) adressées au spécialiste connecté")
+    public ResponseEntity<?> getMesOrientations(Authentication authentication) {
+        return ResponseEntity.ok(prescriptionService.getPrescriptionsForSpecialisteEmail(authentication.getName()));
+    }
+
+    @GetMapping("/specialiste/matricule/{matricule}")
+    @PreAuthorize("hasRole('ORGANISME') or (hasRole('MEDECIN') and @securityService.isMedecinMatricule(principal, #matricule))")
+    @Operation(summary = "Lister les orientations (prescriptions de consultation) adressées à un spécialiste par son matricule")
+    public ResponseEntity<?> getOrientationsByMatricule(@PathVariable String matricule) {
+        return ResponseEntity.ok(prescriptionService.getPrescriptionsForSpecialiste(matricule));
     }
 }

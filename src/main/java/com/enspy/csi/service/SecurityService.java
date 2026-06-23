@@ -17,6 +17,17 @@ public class SecurityService {
     private final ConsultationRepository consultationRepository;
     private final FeuillemMaladieRepository feuillemMaladieRepository;
     private final RemboursementRepository remboursementRepository;
+    private final MedecinRepository medecinRepository;
+
+    public boolean isMedecinMatricule(Object principal, String matricule) {
+        if (!(principal instanceof UserDetails userDetails)) {
+            return false;
+        }
+        String username = userDetails.getUsername(); // email
+        return medecinRepository.findByEmail(username)
+                .map(m -> m.getMatricule().equals(matricule))
+                .orElse(false);
+    }
 
     public boolean isSelfAssure(Object principal, Long assureId) {
         if (!(principal instanceof UserDetails userDetails)) {

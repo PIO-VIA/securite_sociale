@@ -6,9 +6,12 @@ import com.enspy.csi.entity.Consultation;
 import com.enspy.csi.entity.Prescription;
 import com.enspy.csi.entity.PrescriptionConsultation;
 import com.enspy.csi.entity.PrescriptionMedicament;
+import com.enspy.csi.entity.Medecin;
+import com.enspy.csi.entity.Assure;
 import com.enspy.csi.exception.ResourceNotFoundException;
 import com.enspy.csi.repository.PrescriptionRepository;
 import com.enspy.csi.repository.ConsultationRepository;
+import com.enspy.csi.repository.MedecinRepository;
 import com.enspy.csi.service.PrescriptionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     private final PrescriptionRepository prescriptionRepository;
     private final ConsultationRepository consultationRepository;
+    private final MedecinRepository medecinRepository;
 
     @Override
     public PrescriptionResponseDTO ajouterPrescriptionMedicament(PrescriptionRequestDTO dto) {
@@ -82,11 +86,27 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             dto.setMedicament(pm.getMedicament());
             dto.setPosologie(pm.getPosologie());
         }
-        else if (p instanceof PrescriptionConsultation) {
-            PrescriptionConsultation pc = (PrescriptionConsultation) p;
+        else if (p instanceof PrescriptionConsultation pc) {
             dto.setType("CONSULTATION_SPECIALISTE");
             dto.setMatriculeMedecin(pc.getMatriculeMedecin());
             dto.setMotif(pc.getMotif());
+            if (pc.getConsultation() != null) {
+                dto.setDateConsultation(pc.getConsultation().getDate());
+                if (pc.getConsultation().getGeneraliste() != null) {
+                    dto.setMedecinPrescripteurNom(pc.getConsultation().getGeneraliste().getNom());
+                }
+                if (pc.getConsultation().getAssure() != null) {
+                    Assure assure = pc.getConsultation().getAssure();
+                    PrescriptionResponseDTO.AssureMinResponseDTO assureMin = new PrescriptionResponseDTO.AssureMinResponseDTO();
+                    assureMin.setId(assure.getId());
+                    assureMin.setIdAssure(assure.getIdAssure());
+                    assureMin.setNom(assure.getNom());
+                    assureMin.setNumTelephone(assure.getNumTelephone());
+                    assureMin.setSexe(assure.getSexe());
+                    assureMin.setGroupeSanguin(assure.getGroupeSanguin());
+                    dto.setAssure(assureMin);
+                }
+            }
         }
 
         return dto;
@@ -133,6 +153,21 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         Prescription p = prescriptionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Prescription introuvable avec l'ID : " + id));
         prescriptionRepository.delete(p);
+    }
+
+    @Override
+    public List<PrescriptionResponseDTO> getPrescriptionsForSpecialiste(String matricule) {
+        List<PrescriptionConsultation> consultations = prescriptionRepository.findConsultationsByMatriculeMedecin(matricule);
+        return consultations.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PrescriptionResponseDTO> getPrescriptionsForSpecialisteEmail(String email) {
+        Medecin medecin = medecinRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Médecin introuvable avec l'email : " + email));
+        return getPrescriptionsForSpecialiste(medecin.getMatricule());
     }
 
 }

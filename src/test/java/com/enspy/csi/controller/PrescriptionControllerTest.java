@@ -104,4 +104,42 @@ public class PrescriptionControllerTest {
                 .with(user("doctor").roles("MEDECIN")))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    public void getMesOrientations_WithDoctor_ShouldReturnOk() throws Exception {
+        when(prescriptionService.getPrescriptionsForSpecialisteEmail("doctor")).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/prescriptions/specialiste/me")
+                .with(user("doctor").roles("MEDECIN")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void getOrientationsByMatricule_WithOrganisme_ShouldReturnOk() throws Exception {
+        when(prescriptionService.getPrescriptionsForSpecialiste("SPEC-123")).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/prescriptions/specialiste/matricule/SPEC-123")
+                .with(user("admin").roles("ORGANISME")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void getOrientationsByMatricule_WithAuthorizedDoctor_ShouldReturnOk() throws Exception {
+        // Here we mock the securityService check
+        when(securityService.isMedecinMatricule(any(), eq("SPEC-123"))).thenReturn(true);
+        when(prescriptionService.getPrescriptionsForSpecialiste("SPEC-123")).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/prescriptions/specialiste/matricule/SPEC-123")
+                .with(user("doctor").roles("MEDECIN")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void getOrientationsByMatricule_WithUnauthorizedDoctor_ShouldReturnForbidden() throws Exception {
+        when(securityService.isMedecinMatricule(any(), eq("SPEC-123"))).thenReturn(false);
+
+        mockMvc.perform(get("/api/prescriptions/specialiste/matricule/SPEC-123")
+                .with(user("other_doctor").roles("MEDECIN")))
+                .andExpect(status().isForbidden());
+    }
 }
