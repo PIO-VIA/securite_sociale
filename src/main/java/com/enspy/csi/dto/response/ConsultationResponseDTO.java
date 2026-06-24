@@ -15,4 +15,5 @@ public class ConsultationResponseDTO {
     private String generalisteMatricule;
     private Integer nombrePrescriptions;
     private Boolean possedeFeuilleMaladie;
+    private String motif;
 }

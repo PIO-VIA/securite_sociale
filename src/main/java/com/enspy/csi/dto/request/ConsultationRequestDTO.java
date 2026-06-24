@@ -8,4 +8,5 @@ public class ConsultationRequestDTO {
     private LocalDate date;
     private Long assureId;
     private Long generalisteId;
+    private String motif;
 }

@@ -19,6 +19,8 @@ public class Consultation {
 
     private LocalDate date;
 
+    private String motif;
+
     @ManyToOne
     @JoinColumn(name = "assure_id")
     private Assure assure;

@@ -37,6 +37,7 @@ public class ConsultationServiceImpl implements ConsultationService {
         Consultation consultation = new Consultation();
         consultation.setAssure(assure);
         consultation.setGeneraliste(generaliste);
+        consultation.setMotif(dto.getMotif());
 
         if(dto.getDate() != null){
             consultation.setDate(dto.getDate());
@@ -97,6 +98,7 @@ public class ConsultationServiceImpl implements ConsultationService {
         dto.setNombrePrescriptions(
                 consultationSauvegardee.getPrescriptions() != null ? consultationSauvegardee.getPrescriptions().size() : 0);
         dto.setPossedeFeuilleMaladie(consultationSauvegardee.getFeuilleMaladie() != null);
+        dto.setMotif(consultationSauvegardee.getMotif());
 
         return dto;
     }
