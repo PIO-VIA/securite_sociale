@@ -88,10 +88,25 @@ public class ConsultationServiceImpl implements ConsultationService {
 
     @Override
     public List<ConsultationResponseDTO> getConsultationsByGeneraliste(Long generalisteId) {
-        if (!medecinRepository.existsById(generalisteId)){
-            throw new IllegalArgumentException("Médecin dont l'id est " +generalisteId+ " introuvable" );
+        Medecin medecin = medecinRepository.findById(generalisteId)
+                .orElseThrow(() -> new IllegalArgumentException("Médecin dont l'id est " + generalisteId + " introuvable"));
+        if (medecin instanceof Specialiste) {
+            throw new IllegalArgumentException("Erreur: L'ID fourni correspond à un spécialiste, pas à un généraliste.");
         }
         List<Consultation> consultations = consultationRepository.findByGeneralisteId(generalisteId);
+        return consultations.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ConsultationResponseDTO> getConsultationsBySpecialiste(Long specialisteId) {
+        Medecin medecin = medecinRepository.findById(specialisteId)
+                .orElseThrow(() -> new IllegalArgumentException("Médecin dont l'id est " + specialisteId + " introuvable"));
+        if (medecin instanceof Generaliste) {
+            throw new IllegalArgumentException("Erreur: L'ID fourni correspond à un généraliste, pas à un spécialiste.");
+        }
+        List<Consultation> consultations = consultationRepository.findByGeneralisteId(specialisteId);
         return consultations.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

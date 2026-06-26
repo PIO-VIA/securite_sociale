@@ -122,4 +122,57 @@ class PrescriptionServiceImplTest {
             prescriptionService.getPrescriptionsForSpecialisteEmail("unknown@example.com");
         });
     }
+
+    @Test
+    void ajouterPrescriptionMedicament_WhenNotConsultingDoctor_ShouldThrowIllegalArgumentException() {
+        org.springframework.security.core.Authentication authentication = mock(org.springframework.security.core.Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("otherdoctor@example.com");
+        org.springframework.security.core.context.SecurityContext securityContext = mock(org.springframework.security.core.context.SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        org.springframework.security.core.context.SecurityContextHolder.setContext(securityContext);
+
+        com.enspy.csi.dto.request.PrescriptionRequestDTO dto = new com.enspy.csi.dto.request.PrescriptionRequestDTO();
+        dto.setConsultationId(45L);
+        dto.setMedicament("Aspirine");
+        dto.setPosologie("1g par jour");
+
+        when(consultationRepository.findById(45L)).thenReturn(Optional.of(consultation));
+
+        Generaliste otherDoctor = new Generaliste();
+        otherDoctor.setId(2L);
+        otherDoctor.setEmail("otherdoctor@example.com");
+        when(medecinRepository.findByEmail("otherdoctor@example.com")).thenReturn(Optional.of(otherDoctor));
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            prescriptionService.ajouterPrescriptionMedicament(dto);
+        });
+
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void ajouterPrescriptionConsultation_WhenSelfReferral_ShouldThrowIllegalArgumentException() {
+        org.springframework.security.core.Authentication authentication = mock(org.springframework.security.core.Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("doctor@example.com");
+        org.springframework.security.core.context.SecurityContext securityContext = mock(org.springframework.security.core.context.SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        org.springframework.security.core.context.SecurityContextHolder.setContext(securityContext);
+
+        com.enspy.csi.dto.request.PrescriptionRequestDTO dto = new com.enspy.csi.dto.request.PrescriptionRequestDTO();
+        dto.setConsultationId(45L);
+        dto.setMatriculeMedecin("GEN-1122");
+        dto.setMotif("Referral");
+
+        generaliste.setEmail("doctor@example.com");
+        when(consultationRepository.findById(45L)).thenReturn(Optional.of(consultation));
+        when(medecinRepository.findByEmail("doctor@example.com")).thenReturn(Optional.of(generaliste));
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            prescriptionService.ajouterPrescriptionConsultation(dto);
+        });
+
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
 }

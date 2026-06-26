@@ -44,7 +44,7 @@ public class SecurityService {
         }
         String username = userDetails.getUsername();
         Optional<Medecin> gen = medecinRepository.findById(generalisteId);
-        return gen.map(value -> username.equals(value.getMatricule())).orElse(false);
+        return gen.map(value -> username.equals(value.getEmail())).orElse(false);
     }
 
     public boolean isConsultationParticipant(Object principal, Long consultationId) {

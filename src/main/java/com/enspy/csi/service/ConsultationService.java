@@ -9,4 +9,5 @@ public interface ConsultationService {
     ConsultationResponseDTO getConsultationById(Long id);
     List<ConsultationResponseDTO> getConsultationsByAssure(Long assureId);
     List<ConsultationResponseDTO> getConsultationsByGeneraliste(Long generalisteId);
+    List<ConsultationResponseDTO> getConsultationsBySpecialiste(Long specialisteId);
 }

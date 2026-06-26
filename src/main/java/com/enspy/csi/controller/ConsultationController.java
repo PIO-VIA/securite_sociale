@@ -44,4 +44,11 @@ public class ConsultationController {
     public ResponseEntity<?> getByGeneraliste(@PathVariable Long id) {
         return ResponseEntity.ok(consultationService.getConsultationsByGeneraliste(id));
     }
+
+    @GetMapping("/specialiste/{id}")
+    @PreAuthorize("hasAnyRole('ORGANISME','MEDECIN') or @securityService.isSelfGeneraliste(principal, #id)")
+    @Operation(summary = "Lister les consultations par spécialiste — Réservé aux médecins spécialistes. Renvoie 400 si l'ID fourni correspond à un généraliste.")
+    public ResponseEntity<?> getBySpecialiste(@PathVariable Long id) {
+        return ResponseEntity.ok(consultationService.getConsultationsBySpecialiste(id));
+    }
 }

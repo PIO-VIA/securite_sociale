@@ -62,6 +62,16 @@ public class ConsultationControllerTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    public void getBySpecialiste_WithSelfDoctor_ShouldReturnOk() throws Exception {
+        when(securityService.isSelfGeneraliste(any(), eq(2L))).thenReturn(true);
+        when(consultationService.getConsultationsBySpecialiste(2L)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/consultations/specialiste/2")
+                .with(user("doctor").roles("MEDECIN")))
+                .andExpect(status().isOk());
+    }
+
    /* @Test
     public void getById_WithParticipant_ShouldReturnOk() throws Exception {
         when(securityService.isConsultationParticipant(any(), eq(1L))).thenReturn(true);
