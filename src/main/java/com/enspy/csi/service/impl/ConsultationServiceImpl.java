@@ -5,9 +5,13 @@ import com.enspy.csi.dto.response.ConsultationResponseDTO;
 import com.enspy.csi.entity.Assure;
 import com.enspy.csi.entity.Consultation;
 import com.enspy.csi.entity.Generaliste;
+import com.enspy.csi.entity.Medecin;
+import com.enspy.csi.entity.Specialiste;
 import com.enspy.csi.repository.ConsultationRepository;
 import com.enspy.csi.repository.AssureRepository;
 import com.enspy.csi.repository.GeneralisteRepository;
+import com.enspy.csi.repository.MedecinRepository;
+import com.enspy.csi.repository.PrescriptionRepository;
 import com.enspy.csi.service.ConsultationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,19 +28,35 @@ public class ConsultationServiceImpl implements ConsultationService {
     private final ConsultationRepository consultationRepository;
     private final AssureRepository assureRepository;
     private final GeneralisteRepository generalisteRepository;
+    private final MedecinRepository medecinRepository;
+    private final PrescriptionRepository prescriptionRepository;
 
     @Override
     public ConsultationResponseDTO creerConsultation(ConsultationRequestDTO dto) {
         Assure assure = assureRepository.findById(dto.getAssureId()).orElseThrow(() -> new IllegalArgumentException("Assure introuvable avec l'ID: "+dto.getAssureId()));
-        Generaliste generaliste = generalisteRepository.findById(dto.getGeneralisteId()).orElseThrow(() -> new IllegalArgumentException("Medecin generaliste introuvable avec l'ID: "+dto.getGeneralisteId()));
+        Medecin medecin = medecinRepository.findById(dto.getGeneralisteId()).orElseThrow(() -> new IllegalArgumentException("Medecin introuvable avec l'ID: "+dto.getGeneralisteId()));
 
-        if (assure.getMedecinTraitant() == null || !assure.getMedecinTraitant().getId().equals(generaliste.getId())){
-            // Violation de règle métier : renvoie 400 BAD REQUEST (pas 500)
-            throw new IllegalArgumentException("Erreur: L'assure doit consulter son medecin traitant");
+        if (medecin instanceof Generaliste generaliste) {
+            if (assure.getMedecinTraitant() == null || !assure.getMedecinTraitant().getId().equals(generaliste.getId())){
+                // Violation de règle métier : renvoie 400 BAD REQUEST (pas 500)
+                throw new IllegalArgumentException("Erreur: L'assure doit consulter son medecin traitant");
+            }
+        } else if (medecin instanceof Specialiste specialiste) {
+            boolean hasPrescription = prescriptionRepository.findConsultationsByMatriculeMedecin(specialiste.getMatricule())
+                    .stream()
+                    .anyMatch(p -> p.getConsultation() != null
+                            && p.getConsultation().getAssure() != null
+                            && p.getConsultation().getAssure().getId().equals(assure.getId()));
+            if (!hasPrescription) {
+                throw new IllegalArgumentException("Erreur: Ce spécialiste n'a pas reçu de prescription pour cet assuré");
+            }
+        } else {
+            throw new IllegalArgumentException("Erreur: Type de médecin non reconnu");
         }
+
         Consultation consultation = new Consultation();
         consultation.setAssure(assure);
-        consultation.setGeneraliste(generaliste);
+        consultation.setGeneraliste(medecin);
         consultation.setMotif(dto.getMotif());
 
         if(dto.getDate() != null){
@@ -68,8 +88,8 @@ public class ConsultationServiceImpl implements ConsultationService {
 
     @Override
     public List<ConsultationResponseDTO> getConsultationsByGeneraliste(Long generalisteId) {
-        if (!generalisteRepository.existsById(generalisteId)){
-            throw new IllegalArgumentException("Généraliste dont l'id est " +generalisteId+ " introuvable" );
+        if (!medecinRepository.existsById(generalisteId)){
+            throw new IllegalArgumentException("Médecin dont l'id est " +generalisteId+ " introuvable" );
         }
         List<Consultation> consultations = consultationRepository.findByGeneralisteId(generalisteId);
         return consultations.stream()

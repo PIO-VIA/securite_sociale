@@ -27,7 +27,7 @@ public class Consultation {
 
     @ManyToOne
     @JoinColumn(name = "generaliste_id")
-    private Generaliste generaliste;
+    private Medecin generaliste;
 
     @OneToMany(mappedBy = "consultation", cascade = CascadeType.ALL)
     private List<Prescription> prescriptions;

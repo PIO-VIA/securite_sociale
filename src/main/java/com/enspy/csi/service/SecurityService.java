@@ -43,7 +43,7 @@ public class SecurityService {
             return false;
         }
         String username = userDetails.getUsername();
-        Optional<Generaliste> gen = generalisteRepository.findById(generalisteId);
+        Optional<Medecin> gen = medecinRepository.findById(generalisteId);
         return gen.map(value -> username.equals(value.getMatricule())).orElse(false);
     }
 
