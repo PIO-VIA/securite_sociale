@@ -34,6 +34,12 @@ public class SpecialisteControllerTest {
     @MockitoBean
     private SpecialisteRepository specialisteRepository;
 
+    @MockitoBean
+    private com.enspy.csi.repository.MedecinRepository medecinRepository;
+
+    @MockitoBean
+    private com.enspy.csi.repository.AssureRepository assureRepository;
+
     @BeforeEach
     public void setup() {
         mockMvc = MockMvcBuilders
@@ -66,6 +72,35 @@ public class SpecialisteControllerTest {
 
         mockMvc.perform(get("/api/specialistes/domaine/CARDIOLOGIE")
                 .with(user("patient").roles("ASSURE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void getAssuresBySpecialiste_WithAgent_ShouldReturnOk() throws Exception {
+        com.enspy.csi.entity.Specialiste specialiste = new com.enspy.csi.entity.Specialiste();
+        specialiste.setId(1L);
+        specialiste.setMatricule("SPEC123");
+
+        when(medecinRepository.findById(1L)).thenReturn(java.util.Optional.of(specialiste));
+        when(assureRepository.findAssuresBySpecialisteMatricule("SPEC123")).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/specialistes/1/assures")
+                .with(user("agent").roles("ORGANISME")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void getMyAssures_WithSpecialist_ShouldReturnOk() throws Exception {
+        com.enspy.csi.entity.Specialiste specialiste = new com.enspy.csi.entity.Specialiste();
+        specialiste.setId(1L);
+        specialiste.setMatricule("SPEC123");
+        specialiste.setEmail("specialist@example.com");
+
+        when(medecinRepository.findByEmail("specialist@example.com")).thenReturn(java.util.Optional.of(specialiste));
+        when(assureRepository.findAssuresBySpecialisteMatricule("SPEC123")).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/specialistes/me/assures")
+                .with(user("specialist@example.com").roles("MEDECIN")))
                 .andExpect(status().isOk());
     }
 }
