@@ -103,4 +103,29 @@ class RemboursementServiceImplTest {
         verify(feuillemMaladieRepository, times(2)).save(any(FeuillemMaladie.class));
         verify(remboursementRepository, times(1)).save(r);
     }
+
+    @Test
+    void confirmerRemboursement_WhenRemboursementNotFound_ShouldCreateAndSucceed() {
+        when(feuillemMaladieRepository.findById(1L)).thenReturn(Optional.of(f1));
+        when(remboursementRepository.findByFeuilleMaladieId(1L)).thenReturn(Optional.empty());
+        when(remboursementRepository.save(any(Remboursement.class))).thenAnswer(invocation -> {
+            Remboursement r = invocation.getArgument(0);
+            if (r.getId() == null) {
+                r.setId(100L);
+            }
+            return r;
+        });
+
+        RemboursementResponseDTO response = remboursementService.confirmerRemboursement(1L, "VIREMENT");
+
+        assertNotNull(response);
+        assertEquals(Remboursement.STATUT_EFFECTUE, response.getStatut());
+        assertEquals("VIREMENT", response.getModePaiement());
+        assertTrue(f1.getEstRembourse());
+        assertEquals(100.0, response.getMontant());
+        assertEquals(100L, response.getId());
+
+        verify(remboursementRepository, times(2)).save(any(Remboursement.class));
+        verify(feuillemMaladieRepository, times(1)).save(f1);
+    }
 }

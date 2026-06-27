@@ -115,6 +115,9 @@ public class RemboursementServiceImpl implements RemboursementService {
                 .orElseGet(() -> {
                     Remboursement r = new Remboursement();
                     r.setStatut(Remboursement.STATUT_EN_ATTENTE);
+                    r.setMontant(0.0);
+                    // Sauvegarder d'abord pour obtenir un ID et éviter TransientPropertyValueException
+                    r = remboursementRepository.save(r);
                     r.getFeuillesMaladie().add(feuille);
                     feuille.setRemboursement(r);
                     return r;
