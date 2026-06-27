@@ -32,6 +32,7 @@ public class ConsultationServiceImpl implements ConsultationService {
     private final PrescriptionRepository prescriptionRepository;
 
     @Override
+    @Transactional
     public ConsultationResponseDTO creerConsultation(ConsultationRequestDTO dto) {
         Assure assure = assureRepository.findById(dto.getAssureId()).orElseThrow(() -> new IllegalArgumentException("Assure introuvable avec l'ID: "+dto.getAssureId()));
         Medecin medecin = medecinRepository.findById(dto.getGeneralisteId()).orElseThrow(() -> new IllegalArgumentException("Medecin introuvable avec l'ID: "+dto.getGeneralisteId()));
