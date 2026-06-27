@@ -18,6 +18,13 @@ public class RemboursementController {
     private final RemboursementService remboursementService;
     private final FeuillemMaladieService feuillemMaladieService;
 
+    @PostMapping("/initier")
+    @PreAuthorize("hasRole('ORGANISME')")
+    @Operation(summary = "Initier un remboursement pour plusieurs feuilles de maladie")
+    public ResponseEntity<?> initierPourPlusieurs(@RequestBody java.util.List<Long> feuilleMaladieIds) {
+        return ResponseEntity.ok(remboursementService.initierRemboursementPourFeuilles(feuilleMaladieIds));
+    }
+
     @PatchMapping("/{feuilleMaladieId}/confirmer")
     @PreAuthorize("hasRole('ORGANISME')")
     @Operation(summary = "Confirmer le remboursement d'une feuille (agent) : définit le mode de paiement et passe le statut à EFFECTUE")

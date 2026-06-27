@@ -108,10 +108,14 @@ public class SecurityService {
             return false;
         }
         Remboursement r = rOpt.get();
-        if (r.getFeuilleMaladie() != null 
-                && r.getFeuilleMaladie().getConsultation() != null 
-                && r.getFeuilleMaladie().getConsultation().getAssure() != null) {
-            return username.equals(r.getFeuilleMaladie().getConsultation().getAssure().getIdAssure());
+        if (r.getFeuillesMaladie() != null) {
+            for (FeuillemMaladie fm : r.getFeuillesMaladie()) {
+                if (fm.getConsultation() != null 
+                        && fm.getConsultation().getAssure() != null 
+                        && username.equals(fm.getConsultation().getAssure().getIdAssure())) {
+                    return true;
+                }
+            }
         }
         return false;
     }

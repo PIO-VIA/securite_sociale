@@ -39,10 +39,57 @@ public class RemboursementServiceImpl implements RemboursementService {
         Remboursement remboursement = new Remboursement();
         remboursement.setMontant(calculerMontant(feuille));
         remboursement.setStatut(Remboursement.STATUT_EN_ATTENTE);
-        remboursement.setFeuilleMaladie(feuille);
+        remboursement.getFeuillesMaladie().add(feuille);
 
         Remboursement saved = remboursementRepository.save(remboursement);
         feuille.setRemboursement(saved);
+        feuillemMaladieRepository.save(feuille);
+        return toDTO(saved);
+    }
+
+    @Override
+    @Transactional
+    public RemboursementResponseDTO initierRemboursementPourFeuilles(List<Long> feuilleMaladieIds) {
+        if (feuilleMaladieIds == null || feuilleMaladieIds.isEmpty()) {
+            throw new IllegalArgumentException("La liste des IDs de feuilles de maladie ne doit pas être vide.");
+        }
+
+        List<FeuillemMaladie> feuilles = feuillemMaladieRepository.findAllById(feuilleMaladieIds);
+        if (feuilles.size() != feuilleMaladieIds.size()) {
+            throw new ResourceNotFoundException("Une ou plusieurs feuilles de maladie sont introuvables.");
+        }
+
+        for (FeuillemMaladie f : feuilles) {
+            if (Boolean.TRUE.equals(f.getEstRembourse())) {
+                throw new IllegalStateException("La feuille " + f.getIdFeuille() + " a déjà été remboursée.");
+            }
+        }
+
+        Remboursement remboursement = new Remboursement();
+        remboursement.setStatut(Remboursement.STATUT_EN_ATTENTE);
+        remboursement.setFeuillesMaladie(new java.util.ArrayList<>());
+
+        for (FeuillemMaladie f : feuilles) {
+            Remboursement ancien = f.getRemboursement();
+            if (ancien != null) {
+                f.setRemboursement(null);
+                if (Remboursement.STATUT_EN_ATTENTE.equals(ancien.getStatut())) {
+                    remboursementRepository.delete(ancien);
+                }
+            }
+            f.setRemboursement(remboursement);
+            remboursement.getFeuillesMaladie().add(f);
+        }
+
+        double totalMontant = 0.0;
+        for (FeuillemMaladie f : feuilles) {
+            totalMontant += calculerMontant(f);
+        }
+        remboursement.setMontant(totalMontant);
+
+        Remboursement saved = remboursementRepository.save(remboursement);
+        feuillemMaladieRepository.saveAll(feuilles);
+
         return toDTO(saved);
     }
 
@@ -56,11 +103,6 @@ public class RemboursementServiceImpl implements RemboursementService {
             throw new IllegalStateException("Cette feuille de maladie a déjà été remboursée");
         }
 
-        if (feuille.getMontantSoin() == null || feuille.getMontantSoin() <= 0) {
-            throw new IllegalStateException(
-                    "Impossible de rembourser : le montant des soins de la feuille est invalide ou non défini.");
-        }
-
         if (modePaiement == null) {
             throw new IllegalArgumentException("Mode de paiement invalide. Valeurs acceptées : VIREMENT, CASH");
         }
@@ -69,12 +111,12 @@ public class RemboursementServiceImpl implements RemboursementService {
             throw new IllegalArgumentException("Mode de paiement invalide. Valeurs acceptées : VIREMENT, CASH");
         }
 
-        // Récupère le remboursement initié à la création de la feuille, ou le crée si absent (robustesse)
         Remboursement remboursement = remboursementRepository.findByFeuilleMaladieId(feuilleMaladieId)
                 .orElseGet(() -> {
                     Remboursement r = new Remboursement();
                     r.setStatut(Remboursement.STATUT_EN_ATTENTE);
-                    r.setFeuilleMaladie(feuille);
+                    r.getFeuillesMaladie().add(feuille);
+                    feuille.setRemboursement(r);
                     return r;
                 });
 
@@ -82,14 +124,21 @@ public class RemboursementServiceImpl implements RemboursementService {
             throw new IllegalStateException("Ce remboursement a déjà été confirmé.");
         }
 
-        // Recalcule le montant final (reflète une éventuelle orientation spécialiste ajoutée depuis)
-        remboursement.setMontant(calculerMontant(feuille));
+        double totalMontant = 0.0;
+        for (FeuillemMaladie f : remboursement.getFeuillesMaladie()) {
+            if (f.getMontantSoin() == null || f.getMontantSoin() <= 0) {
+                throw new IllegalStateException(
+                        "Impossible de rembourser : le montant des soins de la feuille " + f.getIdFeuille() + " est invalide.");
+            }
+            totalMontant += calculerMontant(f);
+            f.setEstRembourse(true);
+            feuillemMaladieRepository.save(f);
+        }
+
+        remboursement.setMontant(totalMontant);
         remboursement.setModePaiement(normalizedMode);
         remboursement.setDateRemboursement(LocalDate.now());
         remboursement.setStatut(Remboursement.STATUT_EFFECTUE);
-
-        feuille.setEstRembourse(true);
-        feuillemMaladieRepository.save(feuille);
 
         Remboursement saved = remboursementRepository.save(remboursement);
         return toDTO(saved);
@@ -148,13 +197,24 @@ public class RemboursementServiceImpl implements RemboursementService {
         dto.setModePaiement(r.getModePaiement());
         dto.setStatut(r.getStatut());
 
-        FeuillemMaladie feuille = r.getFeuilleMaladie();
-        if (feuille != null) {
-            dto.setFeuilleMaladieId(feuille.getId());
-            dto.setIdFeuille(feuille.getIdFeuille());
-            dto.setMontantSoin(feuille.getMontantSoin());
-            if (feuille.getConsultation() != null && feuille.getConsultation().getAssure() != null) {
-                dto.setAssureNom(feuille.getConsultation().getAssure().getNom());
+        List<FeuillemMaladie> feuilles = r.getFeuillesMaladie();
+        if (feuilles != null && !feuilles.isEmpty()) {
+            FeuillemMaladie first = feuilles.get(0);
+            dto.setFeuilleMaladieId(first.getId());
+            dto.setIdFeuille(first.getIdFeuille());
+            
+            java.util.List<Long> ids = feuilles.stream()
+                    .map(FeuillemMaladie::getId)
+                    .collect(Collectors.toList());
+            dto.setFeuilleMaladieIds(ids);
+
+            double totalMontantSoin = feuilles.stream()
+                    .mapToDouble(f -> f.getMontantSoin() != null ? f.getMontantSoin() : 0.0)
+                    .sum();
+            dto.setMontantSoin(totalMontantSoin);
+
+            if (first.getConsultation() != null && first.getConsultation().getAssure() != null) {
+                dto.setAssureNom(first.getConsultation().getAssure().getNom());
             }
         }
         return dto;
@@ -165,7 +225,11 @@ public class RemboursementServiceImpl implements RemboursementService {
     public void actualiserMontantRemboursement(Long feuilleMaladieId) {
         remboursementRepository.findByFeuilleMaladieId(feuilleMaladieId).ifPresent(remboursement -> {
             if (Remboursement.STATUT_EN_ATTENTE.equals(remboursement.getStatut())) {
-                remboursement.setMontant(calculerMontant(remboursement.getFeuilleMaladie()));
+                double total = 0.0;
+                for (FeuillemMaladie f : remboursement.getFeuillesMaladie()) {
+                    total += calculerMontant(f);
+                }
+                remboursement.setMontant(total);
                 remboursementRepository.save(remboursement);
             }
         });

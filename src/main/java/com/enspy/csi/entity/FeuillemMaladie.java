@@ -9,6 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"remboursement"})
+@EqualsAndHashCode(exclude = {"remboursement"})
 public class FeuillemMaladie {
 
     public static final String STATUT_ACTIF = "ACTIF";
@@ -34,6 +35,7 @@ public class FeuillemMaladie {
     @JoinColumn(name = "consultation_id")
     private Consultation consultation;
 
-    @OneToOne(mappedBy = "feuilleMaladie", cascade = CascadeType.ALL)
+    @ManyToOne
+    @JoinColumn(name = "remboursement_id")
     private Remboursement remboursement;
 }

@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface RemboursementService {
     RemboursementResponseDTO initierRemboursement(Long feuilleMaladieId);
+    RemboursementResponseDTO initierRemboursementPourFeuilles(List<Long> feuilleMaladieIds);
     RemboursementResponseDTO confirmerRemboursement(Long feuilleMaladieId, String modePaiement);
     RemboursementResponseDTO getRemboursementById(Long id);
     RemboursementResponseDTO getByFeuilleMaladieId(Long feuilleMaladieId);

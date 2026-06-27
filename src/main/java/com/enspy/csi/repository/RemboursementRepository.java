@@ -12,7 +12,8 @@ import java.util.Optional;
 
 @Repository
 public interface RemboursementRepository extends JpaRepository<Remboursement, Long> {
-    Optional<Remboursement> findByFeuilleMaladieId(Long feuilleMaladieId);
+    @Query("SELECT r FROM Remboursement r JOIN r.feuillesMaladie f WHERE f.id = :feuilleMaladieId")
+    Optional<Remboursement> findByFeuilleMaladieId(@Param("feuilleMaladieId") Long feuilleMaladieId);
     List<Remboursement> findByModePaiement(String modePaiement);
     List<Remboursement> findByStatut(String statut);
 

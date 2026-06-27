@@ -11,6 +11,7 @@ public class RemboursementResponseDTO {
     private String modePaiement;
     private String statut;
     private Long feuilleMaladieId;
+    private java.util.List<Long> feuilleMaladieIds;
     private String idFeuille;
     private Double montantSoin;
     private String assureNom;
