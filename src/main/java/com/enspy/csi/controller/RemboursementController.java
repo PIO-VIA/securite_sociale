@@ -48,7 +48,7 @@ public class RemboursementController {
         return ResponseEntity.ok(remboursementService.getRemboursementsEnAttente());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:[0-9]+}")
     @PreAuthorize("hasRole('ORGANISME') or @securityService.isSelfAssureForRemboursement(principal, #id)")
     @Operation(summary = "Récupérer un remboursement par ID")
     public ResponseEntity<?> getById(@PathVariable Long id) {
