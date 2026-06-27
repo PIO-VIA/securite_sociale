@@ -91,7 +91,6 @@ public class RemboursementServiceImpl implements RemboursementService {
         }
 
         for (FeuillemMaladie f : feuilles) {
-            f.setRemboursement(remboursement);
             remboursement.getFeuillesMaladie().add(f);
         }
 
@@ -102,6 +101,10 @@ public class RemboursementServiceImpl implements RemboursementService {
         remboursement.setMontant(totalMontant);
 
         Remboursement saved = remboursementRepository.save(remboursement);
+
+        for (FeuillemMaladie f : feuilles) {
+            f.setRemboursement(saved);
+        }
         feuillemMaladieRepository.saveAll(feuilles);
 
         return toDTO(saved);
