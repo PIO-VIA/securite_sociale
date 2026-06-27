@@ -69,14 +69,28 @@ public class RemboursementServiceImpl implements RemboursementService {
         remboursement.setStatut(Remboursement.STATUT_EN_ATTENTE);
         remboursement.setFeuillesMaladie(new java.util.ArrayList<>());
 
+        java.util.Set<Remboursement> anciensADelete = new java.util.HashSet<>();
         for (FeuillemMaladie f : feuilles) {
             Remboursement ancien = f.getRemboursement();
             if (ancien != null) {
-                f.setRemboursement(null);
                 if (Remboursement.STATUT_EN_ATTENTE.equals(ancien.getStatut())) {
-                    remboursementRepository.delete(ancien);
+                    anciensADelete.add(ancien);
+                } else {
+                    f.setRemboursement(null);
                 }
             }
+        }
+
+        for (Remboursement ancien : anciensADelete) {
+            for (FeuillemMaladie other : new java.util.ArrayList<>(ancien.getFeuillesMaladie())) {
+                other.setRemboursement(null);
+                feuillemMaladieRepository.save(other);
+            }
+            ancien.getFeuillesMaladie().clear();
+            remboursementRepository.delete(ancien);
+        }
+
+        for (FeuillemMaladie f : feuilles) {
             f.setRemboursement(remboursement);
             remboursement.getFeuillesMaladie().add(f);
         }

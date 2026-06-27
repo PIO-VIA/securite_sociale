@@ -128,4 +128,32 @@ class RemboursementServiceImplTest {
         verify(remboursementRepository, times(2)).save(any(Remboursement.class));
         verify(feuillemMaladieRepository, times(1)).save(f1);
     }
+
+    @Test
+    void initierRemboursementPourFeuilles_WithExistingPendingRemboursement_ShouldDissociateAndDeleteOld() {
+        Remboursement oldPending = new Remboursement();
+        oldPending.setId(5L);
+        oldPending.setStatut(Remboursement.STATUT_EN_ATTENTE);
+        oldPending.getFeuillesMaladie().add(f1);
+        f1.setRemboursement(oldPending);
+
+        List<Long> ids = Collections.singletonList(1L);
+        when(feuillemMaladieRepository.findAllById(ids)).thenReturn(Collections.singletonList(f1));
+        when(remboursementRepository.save(any(Remboursement.class))).thenAnswer(invocation -> {
+            Remboursement r = invocation.getArgument(0);
+            r.setId(10L);
+            return r;
+        });
+
+        RemboursementResponseDTO response = remboursementService.initierRemboursementPourFeuilles(ids);
+
+        assertNotNull(response);
+        assertEquals(10L, response.getId());
+        assertEquals(100.0, response.getMontant());
+        assertEquals(Remboursement.STATUT_EN_ATTENTE, response.getStatut());
+
+        verify(feuillemMaladieRepository, times(1)).save(f1);
+        verify(remboursementRepository, times(1)).delete(oldPending);
+        verify(remboursementRepository, times(1)).save(any(Remboursement.class));
+    }
 }
