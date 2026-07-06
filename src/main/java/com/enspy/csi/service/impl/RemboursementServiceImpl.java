@@ -2,11 +2,14 @@ package com.enspy.csi.service.impl;
 
 import com.enspy.csi.dto.response.RemboursementResponseDTO;
 import com.enspy.csi.entity.FeuillemMaladie;
+import com.enspy.csi.entity.Medecin;
 import com.enspy.csi.entity.Remboursement;
+import com.enspy.csi.entity.Specialiste;
 import com.enspy.csi.exception.ResourceNotFoundException;
 import com.enspy.csi.repository.FeuillemMaladieRepository;
 import com.enspy.csi.repository.PrescriptionRepository;
 import com.enspy.csi.repository.RemboursementRepository;
+import com.enspy.csi.repository.SpecialisteRepository;
 import com.enspy.csi.service.RemboursementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ public class RemboursementServiceImpl implements RemboursementService {
     private final RemboursementRepository remboursementRepository;
     private final FeuillemMaladieRepository feuillemMaladieRepository;
     private final PrescriptionRepository prescriptionRepository;
+    private final SpecialisteRepository specialisteRepository;
 
     @Override
     @Transactional
@@ -194,15 +198,20 @@ public class RemboursementServiceImpl implements RemboursementService {
 
     /**
      * Calcule le montant remboursable d'une feuille : 100% par défaut,
-     * 80% si la consultation comporte une orientation vers un spécialiste.
+     * 80% si la consultation est faite par un spécialiste ou comporte une orientation vers un spécialiste.
      */
     private double calculerMontant(FeuillemMaladie feuille) {
         double taux = 1.0;
         if (feuille.getConsultation() != null) {
-            Long consultationId = feuille.getConsultation().getId();
-            var specialistPrescriptions = prescriptionRepository.findConsultationsByConsultationId(consultationId);
-            if (!specialistPrescriptions.isEmpty()) {
+            Medecin medecin = feuille.getConsultation().getGeneraliste();
+            if (medecin != null && (medecin instanceof Specialiste || specialisteRepository.existsById(medecin.getId()))) {
                 taux = 0.8;
+            } else {
+                Long consultationId = feuille.getConsultation().getId();
+                var specialistPrescriptions = prescriptionRepository.findConsultationsByConsultationId(consultationId);
+                if (!specialistPrescriptions.isEmpty()) {
+                    taux = 0.8;
+                }
             }
         }
         Double montantSoin = feuille.getMontantSoin();
