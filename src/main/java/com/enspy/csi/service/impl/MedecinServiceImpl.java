@@ -144,6 +144,18 @@ public class MedecinServiceImpl implements MedecinService {
 
         if (dto.getPhotoUrl() != null) medecin.setPhotoUrl(dto.getPhotoUrl());
 
+        if (dto.getMedecinTraitantId() != null) {
+            if (dto.getMedecinTraitantId() == -1L || dto.getMedecinTraitantId() == 0L) {
+                medecin.setMedecinTraitant(null);
+            } else {
+                Generaliste generaliste = generalisteRepository.findById(dto.getMedecinTraitantId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Médecin généraliste introuvable avec l'id : " + dto.getMedecinTraitantId()));
+                medecin.setMedecinTraitant(generaliste);
+            }
+        } else if (dto.getEstAssure() != null && !dto.getEstAssure()) {
+            medecin.setMedecinTraitant(null);
+        }
+
         if (medecin instanceof Specialiste && dto.getDomaineSpecialisation() != null) {
             ((Specialiste) medecin).setDomaineSpecialisation(dto.getDomaineSpecialisation());
         }
@@ -196,6 +208,14 @@ public class MedecinServiceImpl implements MedecinService {
         medecin.setEstAssure(dto.getEstAssure() != null ? dto.getEstAssure() : false);
         medecin.setEmail(dto.getEmail());
         medecin.setPhotoUrl(dto.getPhotoUrl());
+
+        if (dto.getMedecinTraitantId() != null && dto.getMedecinTraitantId() > 0) {
+            Generaliste generaliste = generalisteRepository.findById(dto.getMedecinTraitantId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Médecin généraliste introuvable avec l'id : " + dto.getMedecinTraitantId()));
+            medecin.setMedecinTraitant(generaliste);
+        } else {
+            medecin.setMedecinTraitant(null);
+        }
     }
 
     private void envoyerIdentifiants(Medecin medecin, String motDePasse) {
@@ -220,6 +240,11 @@ public class MedecinServiceImpl implements MedecinService {
         dto.setType(type);
         dto.setEmail(medecin.getEmail());
         dto.setPhotoUrl(medecin.getPhotoUrl());
+        if (medecin.getMedecinTraitant() != null) {
+            dto.setMedecinTraitantId(medecin.getMedecinTraitant().getId());
+            dto.setMedecinTraitantNom(medecin.getMedecinTraitant().getNom());
+            dto.setMedecinTraitantMatricule(medecin.getMedecinTraitant().getMatricule());
+        }
         if (medecin instanceof Specialiste s) {
             dto.setDomaineSpecialisation(s.getDomaineSpecialisation());
         }

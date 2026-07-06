@@ -17,4 +17,7 @@ public class MedecinResponseDTO {
     private String domaineSpecialisation;
     private String email;
     private String photoUrl;
+    private Long medecinTraitantId;
+    private String medecinTraitantNom;
+    private String medecinTraitantMatricule;
 }

@@ -17,4 +17,5 @@ public class MedecinRequestDTO {
     private String email;
     private String motDePasse;
     private String photoUrl;
+    private Long medecinTraitantId;
 }

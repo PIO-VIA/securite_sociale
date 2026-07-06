@@ -17,4 +17,8 @@ public abstract class Medecin extends Personne {
 
     @Column(name = "est_assure")
     private Boolean estAssure = false;
+
+    @ManyToOne
+    @JoinColumn(name = "medecin_traitant_id")
+    private Generaliste medecinTraitant;
 }
