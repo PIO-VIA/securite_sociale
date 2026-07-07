@@ -27,6 +27,7 @@ public class Consultation {
 
     @ManyToOne
     @JoinColumn(name = "generaliste_id")
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
     private Medecin generaliste;
 
     @OneToMany(mappedBy = "consultation", cascade = CascadeType.ALL)

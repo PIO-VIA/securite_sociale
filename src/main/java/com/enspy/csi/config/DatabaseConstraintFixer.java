@@ -21,6 +21,7 @@ public class DatabaseConstraintFixer {
     @PostConstruct
     public void fixDatabase() {
         dropOldConstraint();
+        updateConstraints();
         recalculateSpecialistReimbursements();
     }
 
@@ -31,6 +32,48 @@ public class DatabaseConstraintFixer {
             log.info("Successfully dropped constraint fkf5jedl4jfcwyr2ubg0legfofo (or it did not exist).");
         } catch (Exception e) {
             log.warn("Unable to drop constraint fkf5jedl4jfcwyr2ubg0legfofo: {}", e.getMessage());
+        }
+    }
+
+    private void updateConstraints() {
+        recreateConstraintWithCascadeBehavior("consultation", "generaliste_id", "medecin", "id", "ON DELETE CASCADE");
+        recreateConstraintWithCascadeBehavior("assure", "medecin_traitant_id", "generaliste", "id", "ON DELETE SET NULL");
+        recreateConstraintWithCascadeBehavior("medecin", "medecin_traitant_id", "generaliste", "id", "ON DELETE SET NULL");
+    }
+
+    private void recreateConstraintWithCascadeBehavior(String tableName, String columnName, String referencedTable, String referencedColumn, String behavior) {
+        try {
+            log.info("Updating constraint on {}.{} referencing {} with behavior {}", tableName, columnName, referencedTable, behavior);
+            String plpgsql = 
+                "DO $$\n" +
+                "DECLARE\n" +
+                "    r RECORD;\n" +
+                "BEGIN\n" +
+                "    FOR r IN (\n" +
+                "        SELECT tc.constraint_name\n" +
+                "        FROM information_schema.table_constraints tc\n" +
+                "        JOIN information_schema.key_column_usage kcu\n" +
+                "          ON tc.constraint_name = kcu.constraint_name\n" +
+                "          AND tc.table_schema = kcu.table_schema\n" +
+                "        WHERE tc.constraint_type = 'FOREIGN KEY'\n" +
+                "          AND tc.table_name = '" + tableName + "'\n" +
+                "          AND kcu.column_name = '" + columnName + "'\n" +
+                "    ) LOOP\n" +
+                "        EXECUTE 'ALTER TABLE " + tableName + " DROP CONSTRAINT ' || quote_ident(r.constraint_name);\n" +
+                "    END LOOP;\n" +
+                "END $$;";
+            
+            jdbcTemplate.execute(plpgsql);
+            
+            String constraintName = "fk_" + tableName + "_" + columnName;
+            String alterSql = String.format(
+                "ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s) %s",
+                tableName, constraintName, columnName, referencedTable, referencedColumn, behavior
+            );
+            jdbcTemplate.execute(alterSql);
+            log.info("Successfully recreated constraint {}", constraintName);
+        } catch (Exception e) {
+            log.warn("Unable to update constraint on {}.{}: {}", tableName, columnName, e.getMessage());
         }
     }
 

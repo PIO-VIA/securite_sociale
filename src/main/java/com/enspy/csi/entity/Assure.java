@@ -30,6 +30,7 @@ public class Assure extends Personne {
 
     @ManyToOne
     @JoinColumn(name = "medecin_traitant_id")
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.SET_NULL)
     private Generaliste medecinTraitant;
 
     @OneToMany(mappedBy = "assure")
